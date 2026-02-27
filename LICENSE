@@ -1,21 +1,88 @@
-MIT License
+Functional Source License, Version 1.1, Apache 2.0 Future License
 
-Copyright (c) 2024 Agentica AI Battle
+Licensor:  Agentica AI Battle Arena
+Software:  Agentica AI Battle Arena
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+Copyright 2025-2026 Agentica AI Battle Arena. All Rights Reserved.
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+1. PURPOSE
+
+This license lets you view, learn from, fork, and run this software for
+personal, educational, and non-commercial purposes. It protects against
+unauthorized commercial exploitation while keeping the source open.
+
+2. GRANT OF RIGHTS
+
+Subject to the conditions below, the Licensor grants you a non-exclusive,
+worldwide, royalty-free license to:
+
+  (a) USE the software for personal projects, learning, research, hackathons,
+      and non-commercial demonstrations.
+  (b) MODIFY the software and create derivative works.
+  (c) DISTRIBUTE copies and derivative works, provided this license and
+      copyright notice are included.
+  (d) DEPLOY the software for non-commercial use, including personal servers,
+      educational environments, and community events.
+
+3. RESTRICTIONS
+
+You MAY NOT, without prior written permission from the Licensor:
+
+  (a) Use the software, or any derivative work, for COMMERCIAL PURPOSES.
+      Commercial purposes include, but are not limited to:
+      - Selling access to the software or any hosted instance
+      - Offering the software as a paid service (SaaS)
+      - Integrating the software into a product or service that generates revenue
+      - Using the software to attract paying customers or advertisers
+  (b) Remove or alter this license, copyright notices, or attribution.
+  (c) Represent the software as your own original creation.
+  (d) Use the Licensor's name, logo, or trademarks to endorse derivative works
+      without written permission.
+
+4. COMMERCIAL LICENSING
+
+For commercial use, including SaaS deployment, enterprise integration, or
+revenue-generating applications, contact the Licensor to obtain a commercial
+license. Commercial licenses are available on reasonable terms.
+
+5. ATTRIBUTION
+
+All copies and derivative works must include:
+  - This LICENSE file in its entirety
+  - Prominent attribution: "Built on Agentica AI Battle Arena"
+  - A link to the original repository
+
+6. FUTURE OPEN-SOURCE CONVERSION
+
+On the fourth anniversary of each release of the software (the "Change Date"),
+this license automatically converts to the Apache License, Version 2.0.
+After the Change Date, you may use the software under either this license
+or the Apache 2.0 license, at your choice.
+
+Change Date: February 27, 2030
+
+7. CONTRIBUTIONS
+
+By submitting code, documentation, or other materials to this project, you
+grant the Licensor a perpetual, worldwide, royalty-free license to use,
+modify, and distribute your contributions under this license or any future
+license the Licensor adopts.
+
+8. DISCLAIMER OF WARRANTY
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+LICENSOR BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY, WHETHER IN AN
+ACTION OF CONTRACT, TORT, OR OTHERWISE, ARISING FROM, OUT OF, OR IN CONNECTION
+WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+9. TERMINATION
+
+This license terminates automatically if you violate any of its terms. Upon
+termination, you must destroy all copies of the software in your possession.
+
+10. GOVERNING LAW
+
+This license is governed by the laws of the State of Israel, without regard
+to conflict of law principles.
