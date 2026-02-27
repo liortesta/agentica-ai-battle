@@ -11,6 +11,10 @@
 </p>
 
 <p align="center">
+  <sub>Created by <strong>LIOR TESTA</strong> · <strong>TESTAMIND</strong></sub>
+</p>
+
+<p align="center">
   <a href="#quick-start">Quick Start</a> ·
   <a href="#what-is-this">What Is This</a> ·
   <a href="#features">44+ Features</a> ·
@@ -425,4 +429,9 @@ A: The AI agents regularly produce moments that feel scripted but aren't — bet
   <a href="https://openrouter.ai">Get API Key</a> ·
   <a href="#quick-start">Quick Start</a> ·
   <a href="#api">Build an Agent</a>
+</p>
+
+<p align="center">
+  <sub><strong>LIOR TESTA — TESTAMIND</strong></sub><br>
+  <sub>© 2025-2026 All Rights Reserved</sub>
 </p>
