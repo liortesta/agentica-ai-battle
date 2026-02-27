@@ -1,0 +1,2548 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agentica AI Battle Arena</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0a0a12;--bg2:#0d0d18;--panel:#0c0c1a;--border:#1a1a2e;
+  --gold:#ffd700;--red:#ff3355;--blue:#3366ff;--purple:#aa44ff;
+  --text:#ddd;--dim:#777;--glow-red:rgba(255,51,85,.25);--glow-blue:rgba(51,102,255,.25);--glow-purple:rgba(170,68,255,.25);
+}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,-apple-system,sans-serif}
+
+/* ===== GRID LAYOUT ===== */
+#app{display:grid;height:100vh;grid-template-rows:auto 1fr;grid-template-columns:260px 1fr 300px;grid-template-areas:"hd hd hd" "lp cv rp"}
+
+/* ===== HEADER ===== */
+#header{grid-area:hd;display:flex;align-items:center;gap:12px;padding:6px 14px;background:linear-gradient(90deg,rgba(255,51,85,.08),var(--bg),rgba(51,102,255,.08));border-bottom:1px solid var(--border);flex-wrap:wrap;min-height:38px}
+#header h1{font-size:14px;color:var(--gold);letter-spacing:2px;text-shadow:0 0 12px rgba(255,215,0,.4);white-space:nowrap}
+.hd-pills{display:flex;gap:6px;flex-wrap:wrap;flex:1;justify-content:center}
+.pill{font-size:10px;padding:2px 8px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:12px;white-space:nowrap}
+.pill.c{border-color:rgba(255,51,85,.35);color:#ff99aa}
+.pill.a{border-color:rgba(51,102,255,.35);color:#99bbff}
+.pill.v{border-color:rgba(170,68,255,.35);color:#cc99ff}
+.pill.stab{border-color:rgba(0,255,100,.25);color:#8f8}
+.pill.chaos{border-color:rgba(255,60,60,.25);color:#f88}
+
+/* ===== LEFT PANEL ===== */
+#left-panel{grid-area:lp;background:var(--panel);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+.sec-title{padding:7px 10px;font-size:10px;color:var(--gold);letter-spacing:1px;border-bottom:1px solid var(--border);text-transform:uppercase;font-weight:600;background:rgba(255,215,0,.03)}
+
+/* Collapsible sections */
+.collapse-toggle{cursor:pointer;user-select:none;display:flex;justify-content:space-between;align-items:center}
+.collapse-toggle::after{content:'▾';font-size:8px;color:var(--dim)}
+.collapse-toggle.collapsed::after{content:'▸'}
+
+/* Forms */
+.form-section{padding:8px 10px;border-bottom:1px solid var(--border)}
+.fg{margin-bottom:6px}
+.fg label{display:block;font-size:9px;color:#888;margin-bottom:2px;text-transform:uppercase}
+.fg input,.fg select{width:100%;padding:5px 7px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:4px;font-size:11px;outline:none}
+.fg input:focus,.fg select:focus{border-color:var(--gold)}
+.btn{width:100%;padding:7px;background:linear-gradient(135deg,var(--gold),#cc9900);color:#000;border:none;border-radius:4px;font-size:10px;font-weight:700;cursor:pointer;text-transform:uppercase;transition:.15s}
+.btn:hover{box-shadow:0 2px 10px rgba(255,215,0,.3)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn.sec{background:var(--bg2);color:var(--text);border:1px solid var(--border)}
+.btn.sec:hover{background:#111}
+.model-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:6px}
+.mdl{padding:4px;background:var(--bg2);border:1px solid var(--border);border-radius:3px;font-size:9px;cursor:pointer;text-align:center;transition:.15s}
+.mdl:hover{background:rgba(255,255,255,.05)}
+.mdl.sel{border-color:var(--gold);background:rgba(255,215,0,.1)}
+
+/* Agent list */
+#agent-list{flex:1;overflow-y:auto;padding:8px}
+.acard{background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:6px;padding:10px 12px;margin-bottom:6px;cursor:pointer;transition:.15s}
+.acard:hover{background:rgba(255,255,255,.08);border-color:rgba(255,215,0,.35);transform:translateX(2px)}
+.acard.thinking{border-color:var(--gold);animation:gpulse 1.5s infinite}
+.acard.dead{opacity:.45;border-color:rgba(255,0,0,.25)}
+@keyframes gpulse{0%,100%{box-shadow:none}50%{box-shadow:0 0 8px rgba(255,215,0,.2)}}
+.acard-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.acard-name{font-weight:700;font-size:13px;display:flex;align-items:center;gap:4px}
+.acard-role{font-size:9px;color:#aaa;background:var(--bg2);padding:2px 8px;border-radius:10px;text-transform:capitalize;letter-spacing:.3px;white-space:nowrap}
+.acard-stats{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:4px}
+.acard-stats span{font-size:11px;color:#bbb;background:rgba(255,255,255,.04);padding:2px 6px;border-radius:4px;white-space:nowrap}
+.acard-hp{display:flex;align-items:center;gap:6px;margin-bottom:5px}
+.acard-hp-bar{flex:1;height:5px;background:rgba(255,255,255,.08);border-radius:3px;overflow:hidden}
+.acard-hp-fill{height:100%;border-radius:3px;transition:.3s}
+.acard-hp-text{font-size:10px;color:#999;white-space:nowrap;min-width:58px;text-align:right}
+.acard-thought{margin-top:5px;padding:6px 8px;background:rgba(255,215,0,.04);border-radius:4px;font-size:11px;color:#bbb;font-style:italic;border-left:2px solid var(--gold);max-height:50px;overflow:hidden;line-height:1.4}
+
+/* ===== CANVAS ===== */
+#canvas-area{grid-area:cv;position:relative;overflow:hidden;background:#060810}
+#game-canvas{display:block;width:100%;height:100%;image-rendering:pixelated}
+#minimap{position:absolute;bottom:10px;right:10px;width:140px;height:95px;background:rgba(6,6,15,.9);border:1px solid var(--border);border-radius:5px;overflow:hidden;z-index:20;cursor:crosshair}
+#minimap canvas{width:100%;height:100%}
+#ui-overlay{position:absolute;top:8px;left:50%;transform:translateX(-50%);display:flex;gap:6px;z-index:20}
+.ui-btn{padding:4px 10px;background:rgba(0,0,0,.75);border:1px solid var(--border);color:var(--text);border-radius:14px;font-size:9px;cursor:pointer;backdrop-filter:blur(4px);transition:.15s}
+.ui-btn:hover{border-color:var(--gold);color:var(--gold)}
+#event-banner{position:absolute;top:44px;left:50%;transform:translateX(-50%) translateY(-80px);background:rgba(0,0,0,.92);border:1px solid var(--gold);border-radius:6px;padding:8px 16px;font-size:11px;color:var(--gold);opacity:0;transition:.4s;pointer-events:none;backdrop-filter:blur(8px);white-space:nowrap;z-index:30}
+#event-banner.show{transform:translateX(-50%) translateY(0);opacity:1}
+#conn-badge{position:absolute;bottom:10px;left:10px;padding:3px 8px;background:rgba(0,0,0,.7);border-radius:10px;font-size:9px;display:flex;align-items:center;gap:4px;z-index:20}
+#conn-badge.ok{color:#0c0}
+#conn-badge.err{color:#c00}
+.cdot{width:5px;height:5px;border-radius:50%;background:currentColor}
+
+/* ===== RIGHT PANEL ===== */
+#right-panel{grid-area:rp;background:var(--panel);border-left:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+
+/* Faction cards */
+.fcard{display:flex;align-items:center;gap:7px;padding:7px 10px;border-bottom:1px solid rgba(255,255,255,.04)}
+.ficon{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;flex-shrink:0}
+.ficon.c{background:var(--glow-red);color:var(--red)}
+.ficon.a{background:var(--glow-blue);color:var(--blue)}
+.ficon.v{background:var(--glow-purple);color:var(--purple)}
+.finfo{flex:1;min-width:0}
+.fname{font-size:11px;font-weight:600}
+.fmeta{font-size:9px;color:#999;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fbar{height:3px;background:#111;border-radius:2px;margin-top:3px;overflow:hidden}
+.fbar-fill{height:100%;border-radius:2px;transition:.3s}
+.fecon{font-size:8px;color:#777;margin-top:1px}
+.fecon .pos{color:#0c0}
+.fecon .neg{color:#c00}
+
+/* Tabs for right panel content */
+.tab-bar{display:flex;border-bottom:1px solid var(--border)}
+.tab{flex:1;text-align:center;padding:8px 0;font-size:10px;text-transform:uppercase;letter-spacing:.5px;cursor:pointer;color:var(--dim);border-bottom:2px solid transparent;transition:.15s}
+.tab:hover{color:var(--text)}
+.tab.active{color:var(--gold);border-bottom-color:var(--gold)}
+
+.tab-content{display:none;flex:1;overflow-y:auto;padding:8px 10px}
+.tab-content.active{display:block}
+
+/* Kill feed */
+.kentry{display:flex;align-items:center;gap:6px;padding:6px 4px;border-bottom:1px solid rgba(255,255,255,.04);font-size:11px}
+.kentry .kr{color:#0c0;font-weight:700}
+.kentry .vt{color:#f44}
+.kentry .weap{color:#888;font-size:10px}
+
+/* Chat messages */
+#chat-feed{flex:1;overflow-y:auto}
+.cmsg{padding:6px 8px;border-bottom:1px solid rgba(255,255,255,.04);font-size:12px;line-height:1.5}
+.cmsg.sys{color:var(--gold);font-weight:500}
+.cmsg .sn{font-weight:700;margin-right:5px}
+.cmsg .sn.c{color:var(--red)}
+.cmsg .sn.a{color:var(--blue)}
+.cmsg .sn.v{color:var(--purple)}
+
+/* Conversations (agent-to-agent) */
+.conv{padding:6px 8px;border-bottom:1px solid rgba(255,255,255,.04);font-size:11px}
+.conv .cfrom{font-weight:700}
+.conv .carrow{color:#666;margin:0 4px}
+.conv .cto{font-weight:700}
+.conv .ctxt{color:#bbb;font-style:italic;margin-top:3px;font-size:11px;line-height:1.4}
+
+/* Chat input */
+#chat-box{display:flex;padding:6px 8px;border-top:1px solid var(--border);gap:4px}
+#chat-box input{flex:1;padding:5px 7px;background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:4px;font-size:10px;outline:none}
+#chat-box button{padding:5px 10px;background:var(--gold);color:#000;border:none;border-radius:4px;font-size:10px;font-weight:600;cursor:pointer}
+
+/* ===== AGENT DETAIL OVERLAY ===== */
+#agent-detail{display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:360px;max-height:75vh;background:rgba(10,10,22,.97);border:1px solid var(--gold);border-radius:12px;padding:18px;z-index:100;font-size:13px;backdrop-filter:blur(12px);overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,.6)}
+#agent-detail .dh{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+#agent-detail .dn{font-size:17px;font-weight:700;color:var(--gold)}
+#agent-detail .dx{background:none;border:none;color:#888;cursor:pointer;font-size:18px;padding:0 4px;line-height:1}
+#agent-detail .dx:hover{color:#fff}
+.dsec{margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--border)}
+.dsec:last-of-type{border-bottom:none}
+.dlbl{color:#888;font-size:10px;text-transform:uppercase;margin-bottom:3px;font-weight:600;letter-spacing:.5px}
+.dval{color:#ddd;font-size:12px;line-height:1.5}
+.fbtn{width:100%;padding:6px;background:rgba(255,215,0,.12);border:1px solid var(--gold);color:var(--gold);border-radius:4px;cursor:pointer;font-size:10px;margin-top:6px;transition:.15s}
+.fbtn:hover{background:rgba(255,215,0,.25)}
+.fbtn.on{background:rgba(255,215,0,.25);color:#fff}
+
+/* Reputation badges */
+.rep{font-size:9px;padding:2px 7px;border-radius:10px;margin-left:4px;display:inline-block;font-weight:600;letter-spacing:.3px}
+.rep.legendary{background:rgba(255,215,0,.2);color:#ffd700;border:1px solid rgba(255,215,0,.3)}
+.rep.honorable{background:rgba(0,200,100,.2);color:#0c8;border:1px solid rgba(0,200,100,.3)}
+.rep.neutral{background:rgba(150,150,150,.15);color:#aaa;border:1px solid rgba(150,150,150,.2)}
+.rep.suspicious{background:rgba(255,150,0,.2);color:#f90;border:1px solid rgba(255,150,0,.3)}
+.rep.treacherous{background:rgba(255,0,0,.2);color:#f33;border:1px solid rgba(255,0,0,.3)}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width:1100px){
+  #app{grid-template-columns:220px 1fr 240px}
+}
+@media (max-width:900px){
+  #app{grid-template-columns:1fr;grid-template-rows:auto 50vh auto;grid-template-areas:"hd" "cv" "bp"}
+  #left-panel,#right-panel{display:none}
+  #bottom-panels{grid-area:bp;display:flex;overflow:hidden;border-top:1px solid var(--border)}
+  #bottom-panels>#left-panel,#bottom-panels>#right-panel{display:flex;flex:1;max-height:100%}
+}
+</style>
+</head>
+<body>
+<div id="app">
+
+<!-- HEADER -->
+<div id="header">
+  <h1>AGENTICA BATTLE</h1>
+  <div class="hd-pills">
+    <span class="pill c">Crimson: <b id="cnt-c">0</b></span>
+    <span class="pill a">Azure: <b id="cnt-a">0</b></span>
+    <span class="pill v">Void: <b id="cnt-v">0</b></span>
+    <span class="pill">Day <b id="hd-day">1</b></span>
+    <span class="pill stab">Stability: <b id="idx-stab">-</b></span>
+    <span class="pill chaos">Chaos: <b id="idx-chaos">-</b></span>
+    <span class="pill">Missions: <span id="hd-missions">-</span></span>
+  </div>
+</div>
+
+<!-- LEFT PANEL -->
+<div id="left-panel">
+  <div class="sec-title collapse-toggle" onclick="toggleSection('sec-join')">Join Battle</div>
+  <div id="sec-join" class="form-section">
+    <div class="fg"><label>Name</label><input type="text" id="p-name" placeholder="Your name" value="Player1"></div>
+    <div class="fg"><label>Faction</label>
+      <select id="p-faction">
+        <option value="crimson">Crimson Empire</option>
+        <option value="azure">Azure Republic</option>
+        <option value="void">Void Syndicate</option>
+      </select>
+    </div>
+    <div class="fg"><label>Role</label>
+      <select id="p-role">
+        <option value="warrior">Warrior</option><option value="scout">Scout</option>
+        <option value="assassin">Assassin</option><option value="miner">Miner</option>
+        <option value="builder">Builder</option><option value="diplomat">Diplomat</option>
+        <option value="king">King</option><option value="tank">Tank</option>
+        <option value="mage">Mage</option>
+      </select>
+    </div>
+    <button class="btn" id="join-btn" onclick="joinGame()">Join Battle</button>
+  </div>
+
+  <div class="sec-title collapse-toggle" onclick="toggleSection('sec-ai')">Spawn AI Battle</div>
+  <div id="sec-ai" class="form-section">
+    <input type="hidden" id="admin-key" value="">
+    <input type="hidden" id="agent-key" value="">
+    <div class="model-grid">
+      <div class="mdl sel" data-model="auto-router">Auto Router</div>
+      <div class="mdl" data-model="minimax-m2.5">MiniMax M2.5</div>
+      <div class="mdl" data-model="kimi-k2.5">Kimi K2.5</div>
+      <div class="mdl" data-model="gemini-3-flash">Gemini 3 Flash</div>
+      <div class="mdl" data-model="glm-5">GLM 5</div>
+      <div class="mdl" data-model="deepseek-v3.2">DeepSeek V3.2</div>
+      <div class="mdl" data-model="grok-4.1-fast">Grok 4.1 Fast</div>
+      <div class="mdl" data-model="claude-opus-4.6">Claude Opus</div>
+      <div class="mdl" data-model="claude-sonnet-4.5">Claude Sonnet</div>
+    </div>
+    <p style="font-size:9px;color:#666;margin:4px 0">AI runs locally with fallback logic. Add OPENROUTER_API_KEY env var for LLM models.</p>
+    <button class="btn sec" onclick="spawnAIBattle()">Start AI Battle</button>
+  </div>
+
+  <div class="sec-title">Agents</div>
+  <div id="agent-list"></div>
+</div>
+
+<!-- CANVAS -->
+<div id="canvas-area">
+  <canvas id="game-canvas"></canvas>
+  <div id="minimap"><canvas id="minimap-canvas"></canvas></div>
+  <div id="ui-overlay">
+    <button class="ui-btn" onclick="togglePause()">Pause</button>
+    <button class="ui-btn" onclick="triggerEvent()">Event</button>
+    <button class="ui-btn" onclick="resetGame()">Reset</button>
+  </div>
+  <div id="event-banner"></div>
+  <div id="conn-badge" class="err"><span class="cdot"></span><span id="conn-text">Connecting...</span></div>
+</div>
+
+<!-- RIGHT PANEL -->
+<div id="right-panel">
+  <div class="sec-title">Factions</div>
+  <div id="faction-area">
+    <div style="font-size:9px;color:#888;padding:4px 10px">
+      Day <b id="day-num">1</b> Era <b id="era-num">1</b>
+      <span id="tod" style="color:var(--gold);margin-left:6px"></span>
+      <span id="active-evt" style="color:#f60;margin-left:6px"></span>
+    </div>
+    <div class="fcard">
+      <div class="ficon c">C</div>
+      <div class="finfo">
+        <div class="fname">Crimson Empire</div>
+        <div class="fmeta">Score: <b id="f-c-score">0</b> | K: <b id="f-c-kills">0</b> | W: <b id="f-c-wealth">100</b> | T: <b id="f-c-terr">0</b></div>
+        <div class="fecon" id="f-c-econ"></div>
+        <div class="fbar"><div class="fbar-fill" id="f-c-bar" style="width:33%;background:var(--red)"></div></div>
+      </div>
+    </div>
+    <div class="fcard">
+      <div class="ficon a">A</div>
+      <div class="finfo">
+        <div class="fname">Azure Republic</div>
+        <div class="fmeta">Score: <b id="f-a-score">0</b> | K: <b id="f-a-kills">0</b> | W: <b id="f-a-wealth">100</b> | T: <b id="f-a-terr">0</b></div>
+        <div class="fecon" id="f-a-econ"></div>
+        <div class="fbar"><div class="fbar-fill" id="f-a-bar" style="width:33%;background:var(--blue)"></div></div>
+      </div>
+    </div>
+    <div class="fcard">
+      <div class="ficon v">V</div>
+      <div class="finfo">
+        <div class="fname">Void Syndicate</div>
+        <div class="fmeta">Score: <b id="f-v-score">0</b> | K: <b id="f-v-kills">0</b> | W: <b id="f-v-wealth">100</b> | T: <b id="f-v-terr">0</b></div>
+        <div class="fecon" id="f-v-econ"></div>
+        <div class="fbar"><div class="fbar-fill" id="f-v-bar" style="width:33%;background:var(--purple)"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabbed content: Kills / Chat / Conversations -->
+  <div class="tab-bar">
+    <div class="tab active" data-tab="tab-kills" onclick="switchTab(this)">Kills</div>
+    <div class="tab" data-tab="tab-chat" onclick="switchTab(this)">Chat</div>
+    <div class="tab" data-tab="tab-conv" onclick="switchTab(this)">AI Talk</div>
+  </div>
+  <div id="tab-kills" class="tab-content active"></div>
+  <div id="tab-chat" class="tab-content">
+    <div id="chat-feed"></div>
+  </div>
+  <div id="tab-conv" class="tab-content"></div>
+
+  <div id="chat-box">
+    <input type="text" id="chat-text" placeholder="Type message..." onkeypress="if(event.key==='Enter')sendChat()">
+    <button onclick="sendChat()">Send</button>
+  </div>
+</div>
+
+</div><!-- /app -->
+
+<!-- Agent Detail Overlay -->
+<div id="agent-detail">
+  <div class="dh">
+    <span class="dn" id="d-name">-</span>
+    <button class="dx" onclick="closeDetail()">&times;</button>
+  </div>
+  <div class="dsec"><div class="dlbl">Stats</div><div class="dval" id="d-stats">-</div></div>
+  <div class="dsec"><div class="dlbl">Reputation</div><div class="dval" id="d-rep">-</div></div>
+  <div class="dsec"><div class="dlbl">Relations</div><div class="dval" id="d-rel">None</div></div>
+  <div class="dsec"><div class="dlbl">Last Thought</div><div class="dval" id="d-thought" style="font-style:italic;color:#aaa">-</div></div>
+  <button class="fbtn" id="follow-btn" onclick="toggleFollow()">Follow Agent</button>
+</div>
+
+<!-- HUD Bar (visible when playing as human) -->
+<div id="hud-bar" style="display:none;position:fixed;bottom:0;left:260px;right:300px;height:48px;background:rgba(10,10,22,.95);border-top:1px solid #1a1a2e;z-index:50;align-items:center;padding:0 12px;gap:10px;font-size:11px;backdrop-filter:blur(8px)">
+  <div id="hud-hp" style="display:flex;align-items:center;gap:4px">
+    <span style="color:#f44">HP</span>
+    <div style="width:100px;height:8px;background:#111;border-radius:4px;overflow:hidden">
+      <div id="hud-hp-fill" style="height:100%;background:#00cc44;border-radius:4px;transition:.3s;width:100%"></div>
+    </div>
+    <span id="hud-hp-text" style="color:#aaa;min-width:50px">100/100</span>
+  </div>
+  <div style="display:flex;gap:8px;align-items:center">
+    <span style="color:#ffd700" title="Gold">Au:<span id="hud-gold">0</span></span>
+    <span style="color:#33ff88" title="Food">Fd:<span id="hud-food">0</span></span>
+    <span style="color:#8B5A2B" title="Wood">Wd:<span id="hud-wood">0</span></span>
+    <span style="color:#888" title="Stone">St:<span id="hud-stone">0</span></span>
+  </div>
+  <div style="border-left:1px solid #333;height:30px;margin:0 4px"></div>
+  <div id="hud-build" style="display:flex;gap:3px">
+    <span style="color:#888;font-size:9px;align-self:center">BUILD:</span>
+    <button class="hud-btype sel" data-type="wall" onclick="selectBuild('wall')">1:Wall</button>
+    <button class="hud-btype" data-type="tower" onclick="selectBuild('tower')">2:Tower</button>
+    <button class="hud-btype" data-type="mine" onclick="selectBuild('mine')">3:Mine</button>
+    <button class="hud-btype" data-type="barracks" onclick="selectBuild('barracks')">4:Barracks</button>
+  </div>
+  <div style="flex:1"></div>
+  <div style="color:#666;font-size:9px">WASD:Move Space:Attack C:Collect X:Capture B:Build Tab:Board</div>
+</div>
+
+<!-- Leaderboard Overlay -->
+<div id="leaderboard-overlay" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:600px;max-height:80vh;background:rgba(10,10,22,.97);border:1px solid var(--gold);border-radius:12px;z-index:200;backdrop-filter:blur(12px);overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,.7)">
+  <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid #1a1a2e">
+    <h2 style="color:#ffd700;font-size:16px;margin:0">LEADERBOARD</h2>
+    <div style="display:flex;gap:4px">
+      <button class="lb-tab active" data-tab="lb-factions" onclick="switchLbTab('lb-factions',this)">Factions</button>
+      <button class="lb-tab" data-tab="lb-agents" onclick="switchLbTab('lb-agents',this)">Agents</button>
+      <button class="lb-tab" data-tab="lb-models" onclick="switchLbTab('lb-models',this)">Models</button>
+    </div>
+    <button onclick="toggleLeaderboard()" style="background:none;border:none;color:#888;cursor:pointer;font-size:18px">&times;</button>
+  </div>
+  <div id="lb-factions" class="lb-content" style="padding:12px"></div>
+  <div id="lb-agents" class="lb-content" style="padding:12px;display:none"></div>
+  <div id="lb-models" class="lb-content" style="padding:12px;display:none"></div>
+</div>
+
+<style>
+.hud-btype{padding:3px 8px;background:#111;border:1px solid #333;color:#aaa;border-radius:4px;font-size:10px;cursor:pointer;transition:.15s}
+.hud-btype:hover{border-color:#ffd700;color:#ffd700}
+.hud-btype.sel{border-color:#ffd700;color:#ffd700;background:rgba(255,215,0,.1)}
+.lb-tab{padding:4px 10px;background:#111;border:1px solid #333;color:#aaa;border-radius:4px;font-size:10px;cursor:pointer}
+.lb-tab.active{border-color:#ffd700;color:#ffd700;background:rgba(255,215,0,.1)}
+.lb-content table{width:100%;border-collapse:collapse;font-size:11px}
+.lb-content th{text-align:left;color:#ffd700;font-size:9px;text-transform:uppercase;padding:6px 8px;border-bottom:1px solid #222}
+.lb-content td{padding:5px 8px;border-bottom:1px solid rgba(255,255,255,.04);color:#ccc}
+.lb-content tr:hover td{background:rgba(255,255,255,.03)}
+</style>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+// ═══════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════
+const socket = io();
+const canvas = document.getElementById('game-canvas');
+const ctx = canvas.getContext('2d');
+const mmCanvas = document.getElementById('minimap-canvas');
+const mmCtx = mmCanvas.getContext('2d');
+const canvasArea = document.getElementById('canvas-area');
+const minimapEl = document.getElementById('minimap');
+
+let gameState = null, worldMap = null;
+let myAgentId = null, isHuman = false;
+let tileSize = 20, mapWidth = 50, mapHeight = 35;
+let selectedModels = ['auto-router'];
+let heartbeatTimer = null;
+let followAgentId = null, selectedAgentId = null;
+let winData = null, winCountdown = 0, winTimer = null;
+let _lastRenderError = null, _renderFPS = 0, _frameCount = 0, _fpsTime = 0;
+
+// ═══════════════════════════════════════════════
+// ZOOM & PAN SYSTEM
+// ═══════════════════════════════════════════════
+let zoomLevel = 1.0;
+const ZOOM_MIN = 0.25, ZOOM_MAX = 4.0;
+let isPanning = false, panStartX = 0, panStartY = 0;
+let camOffsetX = 0, camOffsetY = 0; // manual pan offset in tiles
+
+// ═══════════════════════════════════════════════
+// PARTICLE SYSTEM
+// ═══════════════════════════════════════════════
+const particles = []; // { x, y, vx, vy, life, maxLife, color, size, text, type }
+const PARTICLE_MAX = 300;
+
+// ═══════════════════════════════════════════════
+// SCREEN SHAKE
+// ═══════════════════════════════════════════════
+let shakeIntensity = 0, shakeDecay = 0.92;
+
+// ═══════════════════════════════════════════════
+// TERRAIN ATLAS (pre-rendered)
+// ═══════════════════════════════════════════════
+let terrainCanvas = null, terrainCtx = null, terrainDirty = true;
+let territoryCanvas = null, territoryCtx = null, territoryDirty = true;
+let _lastTerritoryRedraw = 0;
+
+// ═══════════════════════════════════════════════
+// DAMAGE TRACKING (for floating numbers)
+// ═══════════════════════════════════════════════
+const _prevHp = new Map(); // agentId -> last known HP
+
+// ═══════════════════════════════════════════════
+// SMOOTH INTERPOLATION SYSTEM
+// ═══════════════════════════════════════════════
+const _prevPositions = new Map(); // agentId -> {x, y}
+const _renderPositions = new Map(); // agentId -> {x, y} (smoothed)
+let _lastStateTime = 0;
+let _stateInterval = 100; // ~10Hz server broadcast
+
+// Canvas auto-fits container
+let renderW = 0, renderH = 0;
+function fitCanvas() {
+  const w = canvasArea.clientWidth;
+  const h = canvasArea.clientHeight;
+  if (w === renderW && h === renderH) return;
+  renderW = w; renderH = h;
+  canvas.width = w; canvas.height = h;
+  canvas.style.width = w + 'px';
+  canvas.style.height = h + 'px';
+  mmCanvas.width = mapWidth;
+  mmCanvas.height = mapHeight;
+}
+new ResizeObserver(fitCanvas).observe(canvasArea);
+
+// ═══════════════════════════════════════════════
+// SOCKET EVENTS
+// ═══════════════════════════════════════════════
+socket.on('connect', () => {
+  document.getElementById('conn-badge').className = 'ok';
+  document.getElementById('conn-text').textContent = 'Connected';
+  socket.emit('spectate');
+});
+socket.on('disconnect', () => {
+  document.getElementById('conn-badge').className = 'err';
+  document.getElementById('conn-text').textContent = 'Disconnected';
+  if (heartbeatTimer) { clearInterval(heartbeatTimer); heartbeatTimer = null; }
+});
+socket.on('game-init', (d) => {
+  mapWidth = d.width; mapHeight = d.height; tileSize = d.tileSize;
+  worldMap = d.map || worldMap;
+  mmCanvas.width = mapWidth; mmCanvas.height = mapHeight;
+  terrainDirty = true; // rebuild terrain atlas
+  territoryDirty = true;
+  // Set initial camera to map center if not following
+  if (!followAgentId) {
+    camOffsetX = mapWidth / 2 - canvas.width / getScale() / tileSize / 2;
+    camOffsetY = mapHeight / 2 - canvas.height / getScale() / tileSize / 2;
+  }
+});
+// Territory updates from server
+socket.on('territory-update', (data) => {
+  if (!worldMap || !data) return;
+  // data = { changes: [{x, y, owner},...] }
+  (data.changes || []).forEach(c => {
+    if (worldMap[c.y] && worldMap[c.y][c.x]) {
+      worldMap[c.y][c.x].owner = c.owner;
+    }
+  });
+  territoryDirty = true;
+});
+// Milestone events from server
+socket.on('milestone', (data) => {
+  if (data && data.text) {
+    addMilestone(data.text, data.color || '#ffd700');
+  }
+});
+socket.on('game-state', (s) => {
+  // Track position changes for interpolation
+  const now = performance.now();
+  if (_lastStateTime > 0) _stateInterval = Math.min(500, now - _lastStateTime);
+  _lastStateTime = now;
+
+  // Save current render positions as "previous" and set new targets
+  if (s.agents) {
+    s.agents.forEach(a => {
+      const cur = _renderPositions.get(a.id);
+      if (cur) {
+        _prevPositions.set(a.id, { x: cur.x, y: cur.y });
+      } else {
+        _prevPositions.set(a.id, { x: a.x, y: a.y });
+      }
+    });
+  }
+
+  gameState = s;
+  try { updateUI(s); } catch(e) { console.error('updateUI error:', e); }
+  try { if (isHuman && typeof updateHUD === 'function') updateHUD(); } catch(e) {}
+  try { if (typeof leaderboardVisible !== 'undefined' && leaderboardVisible) updateLeaderboard(); } catch(e) {}
+  try { if (typeof checkMilestones === 'function') checkMilestones(); } catch(e) {}
+});
+socket.on('agent-registered', (d) => {
+  myAgentId = d.agentId; isHuman = false;
+  if (heartbeatTimer) clearInterval(heartbeatTimer);
+  if (d.reconnectToken) {
+    heartbeatTimer = setInterval(() => {
+      socket.emit('agent-heartbeat', { agentId: d.agentId, reconnectToken: d.reconnectToken });
+    }, d.heartbeatIntervalMs || 10000);
+  }
+  addChat('System', `AI agent ${d.name} registered.`, true);
+});
+socket.on('human-registered', (d) => {
+  myAgentId = d.agentId; isHuman = true;
+  followAgentId = d.agentId; // Auto-follow self
+  document.getElementById('join-btn').textContent = 'Connected!';
+  document.getElementById('join-btn').disabled = true;
+  document.getElementById('hud-bar').style.display = 'flex';
+  addChat('System', `You joined as ${d.name}.`, true);
+});
+socket.on('chat-message', (d) => addChat(d.sender, d.message, d.sender === 'System'));
+socket.on('agent-killed', (d) => addKill(d.killer, d.victim, d.killerFaction));
+socket.on('zone-captured', (d) => showBanner(`${fName(d.faction)} captured a zone!`));
+socket.on('world-event', (d) => showBanner(`${d.name}: ${d.description}`));
+socket.on('building-created', (d) => showBanner(`${d.owner || d.faction} built a ${d.type}!`));
+socket.on('building-destroyed', (d) => showBanner(`${d.destroyedBy} destroyed a ${d.type}!`));
+socket.on('game-won', (d) => {
+  winData = d;
+  winCountdown = 30;
+  if (winTimer) clearInterval(winTimer);
+  winTimer = setInterval(() => {
+    winCountdown--;
+    if (winCountdown <= 0) { clearInterval(winTimer); winTimer = null; }
+  }, 1000);
+});
+socket.on('game-restart', () => {
+  winData = null;
+  winCountdown = 0;
+  if (winTimer) { clearInterval(winTimer); winTimer = null; }
+  // Reset milestones for new match
+  if (typeof milestones !== 'undefined') milestones.length = 0;
+  if (typeof lastMilestoneCheck !== 'undefined') Object.keys(lastMilestoneCheck).forEach(k => delete lastMilestoneCheck[k]);
+});
+socket.on('game-paused', (p) => showBanner(p ? 'Game paused' : 'Game resumed'));
+socket.on('error', (m) => alert('Error: ' + m));
+socket.on('agent-message', (m) => addConv(m));
+
+// ═══════════════════════════════════════════════
+// UI ACTIONS
+// ═══════════════════════════════════════════════
+function joinGame() {
+  const name = document.getElementById('p-name').value;
+  if (!name) return alert('Enter your name');
+  socket.emit('join-human', { name, faction: document.getElementById('p-faction').value, role: document.getElementById('p-role').value });
+}
+function spawnAIBattle() {
+  socket.emit('spawn-battle', { models: selectedModels, count: 6, adminKey: document.getElementById('admin-key')?.value?.trim() || '' });
+}
+function togglePause() { socket.emit('pause', { adminKey: document.getElementById('admin-key')?.value?.trim() || '' }); }
+function triggerEvent() { socket.emit('trigger-event', { adminKey: document.getElementById('admin-key')?.value?.trim() || '' }); }
+function resetGame() { location.reload(); }
+function sendChat() {
+  const inp = document.getElementById('chat-text');
+  const msg = inp.value.trim();
+  if (msg) { socket.emit('chat', msg); inp.value = ''; }
+}
+
+// Collapsible sections
+function toggleSection(id) {
+  const el = document.getElementById(id);
+  const btn = el.previousElementSibling;
+  if (el.style.display === 'none') { el.style.display = ''; btn.classList.remove('collapsed'); }
+  else { el.style.display = 'none'; btn.classList.add('collapsed'); }
+}
+
+// Tab switching
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  tab.classList.add('active');
+  document.getElementById(tab.dataset.tab).classList.add('active');
+}
+
+// Model selection
+document.querySelectorAll('.mdl').forEach(el => {
+  el.addEventListener('click', () => {
+    el.classList.toggle('sel');
+    selectedModels = Array.from(document.querySelectorAll('.mdl.sel')).map(e => e.dataset.model);
+  });
+});
+
+// ═══════════════════════════════════════════════
+// DETAIL PANEL + FOLLOW
+// ═══════════════════════════════════════════════
+function showAgentDetail(agent) {
+  selectedAgentId = agent.id;
+  const p = document.getElementById('agent-detail');
+  p.style.display = 'block';
+  document.getElementById('d-name').textContent = `${fEmoji(agent.faction)} ${agent.name}`;
+  document.getElementById('d-name').style.color = fColor(agent.faction);
+  const inv = agent.inventory || {};
+  const modelStr = (agent.model || 'fallback-ai').replace(/^(openai|anthropic|google|meta-llama|mistralai|deepseek)\//i, '');
+  const kd = agent.deaths ? (agent.kills / agent.deaths).toFixed(1) : agent.kills + '.0';
+  document.getElementById('d-stats').innerHTML =
+    `<div style="margin-bottom:4px;padding:4px 6px;background:rgba(255,215,0,.08);border-radius:4px;font-size:12px">` +
+    `<b style="color:#ffd700">Model:</b> <span style="color:#fff">${esc(modelStr)}</span> &nbsp; ` +
+    `<b style="color:#ffd700">Role:</b> <span style="color:#fff;text-transform:capitalize">${agent.role}</span></div>` +
+    `HP: ${agent.hp}/${agent.maxHp} | ATK: ${agent.attack||'?'} | DEF: ${agent.defense||'?'}<br>` +
+    `Level: ${agent.level} | K/D: ${agent.kills}/${agent.deaths||0} (${kd}) | Score: ${agent.score}<br>` +
+    `Emotion: ${agent.emotion} | State: ${agent.state}` +
+    (agent.personality ? ` | Trait: ${agent.personality}` : '') + `<br>` +
+    `<span style="color:#ffd700">Gold:${inv.gold||0}</span> <span style="color:#33ff88">Food:${inv.food||0}</span> <span style="color:#8B5A2B">Wood:${inv.wood||0}</span> <span style="color:#888">Stone:${inv.stone||0}</span>`;
+  const rl = agent.reputationLabel || 'Neutral';
+  document.getElementById('d-rep').innerHTML = `<span class="rep ${rl.toLowerCase()}">${rl}</span> (${agent.reputationScore||0})`;
+  document.getElementById('d-thought').textContent = agent.lastThought || '-';
+  const btn = document.getElementById('follow-btn');
+  btn.textContent = followAgentId === agent.id ? 'Unfollow' : 'Follow Agent';
+  btn.className = 'fbtn' + (followAgentId === agent.id ? ' on' : '');
+}
+function closeDetail() { document.getElementById('agent-detail').style.display = 'none'; selectedAgentId = null; }
+function toggleFollow() {
+  if (!selectedAgentId) return;
+  if (followAgentId === selectedAgentId) { followAgentId = null; }
+  else { followAgentId = selectedAgentId; }
+  if (selectedAgentId && gameState) {
+    const a = gameState.agents.find(x => x.id === selectedAgentId);
+    if (a) showAgentDetail(a);
+  }
+}
+
+// Canvas click -> select agent
+canvas.addEventListener('click', (e) => {
+  if (!gameState) return;
+  const rect = canvas.getBoundingClientRect();
+  const mx = e.clientX - rect.left, my = e.clientY - rect.top;
+  // Convert to world coords
+  const scale = getScale();
+  const cam = getCam();
+  const wx = (mx / scale / tileSize) + cam.x;
+  const wy = (my / scale / tileSize) + cam.y;
+  let best = null, bestD = 2;
+  gameState.agents.forEach(a => {
+    const d = Math.hypot(a.x - wx, a.y - wy);
+    if (d < bestD) { bestD = d; best = a; }
+  });
+  if (best) showAgentDetail(best);
+});
+
+// ═══════════════════════════════════════════════
+// FEED HELPERS
+// ═══════════════════════════════════════════════
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+// Chat message queue — throttle display to avoid spam
+const chatQueue = [];
+let chatDraining = false;
+function addChat(sender, msg, sys) {
+  chatQueue.push({ sender, msg, sys });
+  if (!chatDraining) drainChat();
+}
+function drainChat() {
+  chatDraining = true;
+  if (chatQueue.length === 0) { chatDraining = false; return; }
+  const { sender, msg, sys } = chatQueue.shift();
+  const c = document.getElementById('chat-feed');
+  const d = document.createElement('div');
+  d.className = 'cmsg' + (sys ? ' sys' : '');
+  d.style.opacity = '0'; d.style.transition = 'opacity 0.3s';
+  const fc = factionOf(sender);
+  d.innerHTML = `<span class="sn ${fc}">${esc(sender)}:</span> ${esc(msg)}`;
+  c.appendChild(d);
+  requestAnimationFrame(() => d.style.opacity = '1');
+  c.scrollTop = c.scrollHeight;
+  if (c.children.length > 30) c.removeChild(c.firstChild);
+  setTimeout(drainChat, 1200); // 1.2s between messages
+}
+function addKill(killer, victim, kf) {
+  const c = document.getElementById('tab-kills');
+  const d = document.createElement('div');
+  d.className = 'kentry';
+  d.innerHTML = `<span class="kr">${esc(killer)}</span><span class="weap">killed</span><span class="vt">${esc(victim)}</span>`;
+  c.insertBefore(d, c.firstChild);
+  if (c.children.length > 30) c.removeChild(c.lastChild);
+}
+function addConv(msg) {
+  const c = document.getElementById('tab-conv');
+  const d = document.createElement('div');
+  d.className = 'conv';
+  d.innerHTML =
+    `<span class="cfrom" style="color:${fColor(msg.fromFaction)}">${esc(msg.fromName)}</span>` +
+    `<span class="carrow">&rarr;</span>` +
+    `<span class="cto">${esc(msg.toName)}</span>` +
+    `<div class="ctxt">"${esc(msg.text)}"</div>`;
+  c.insertBefore(d, c.firstChild);
+  if (c.children.length > 40) c.removeChild(c.lastChild);
+  // Flash the tab
+  const tab = document.querySelector('[data-tab="tab-conv"]');
+  if (tab && !tab.classList.contains('active')) tab.style.color = '#ffd700';
+}
+function showBanner(text) {
+  const b = document.getElementById('event-banner');
+  b.textContent = text;
+  b.classList.add('show');
+  setTimeout(() => b.classList.remove('show'), 4000);
+}
+
+// ═══════════════════════════════════════════════
+// UPDATE UI
+// ═══════════════════════════════════════════════
+const TOD_E = { dawn:'🌅', day:'☀️', dusk:'🌆', night:'🌙' };
+
+function updateUI(s) {
+  const cnt = { crimson:0, azure:0, void:0 };
+  s.agents.forEach(a => cnt[a.faction]++);
+  document.getElementById('cnt-c').textContent = cnt.crimson;
+  document.getElementById('cnt-a').textContent = cnt.azure;
+  document.getElementById('cnt-v').textContent = cnt.void;
+  document.getElementById('hd-day').textContent = s.day;
+  const dn = document.getElementById('day-num'); if (dn) dn.textContent = s.day;
+  const en = document.getElementById('era-num'); if (en) en.textContent = s.era || 1;
+  const tod = document.getElementById('tod');
+  if (tod && s.time_of_day) tod.textContent = `${TOD_E[s.time_of_day]||'☀️'} ${s.time_of_day}`;
+  const ae = document.getElementById('active-evt');
+  if (ae) ae.textContent = s.active_event ? `⚡ ${s.active_event}` : '';
+
+  // World indices
+  if (s.worldIndices) {
+    const se = document.getElementById('idx-stab');
+    const ce = document.getElementById('idx-chaos');
+    if (se) se.textContent = s.worldIndices.stability;
+    if (ce) ce.textContent = s.worldIndices.chaos;
+  }
+
+  // Missions
+  if (s.factionGoals) {
+    const mc = s.factionGoals.crimson?.mode || '-';
+    const ma = s.factionGoals.azure?.mode || '-';
+    const mv = s.factionGoals.void?.mode || '-';
+    document.getElementById('hd-missions').textContent = `C:${mc} A:${ma} V:${mv}`;
+  }
+
+  // Factions
+  if (s.factions) {
+    const fmap = { crimson:'c', azure:'a', void:'v' };
+    ['crimson','azure','void'].forEach(f => {
+      const fc = s.factions[f]; if (!fc) return;
+      const k = fmap[f];
+      document.getElementById(`f-${k}-score`).textContent = fc.score;
+      document.getElementById(`f-${k}-kills`).textContent = fc.kills;
+      const we = document.getElementById(`f-${k}-wealth`);
+      if (we) { we.textContent = Math.round(fc.wealth||0); we.style.color = fc.wealth < 0 ? '#f33' : ''; }
+      const te = document.getElementById(`f-${k}-terr`);
+      if (te) te.textContent = fc.territory || 0;
+      const ec = document.getElementById(`f-${k}-econ`);
+      if (ec) {
+        const net = (fc.income||0) - (fc.upkeep||0);
+        ec.innerHTML = `+${fc.income||0}/s -${fc.upkeep||0}/s = <span class="${net>=0?'pos':'neg'}">${net>=0?'+':''}${net}/s</span>`;
+      }
+    });
+  }
+
+  updateAgentList(s.agents);
+}
+
+const EM_MAP = { angry:'😡', afraid:'😨', happy:'😊', ambitious:'🔥', grief:'😢', love:'❤️', hate:'💀', neutral:'😐' };
+const ST_MAP = { idle:'Idle', moving:'Move', attacking:'⚔️', collecting:'Collect', capturing:'🏴', building:'🏗️', retreating:'🏃' };
+
+function updateAgentList(agents) {
+  const c = document.getElementById('agent-list');
+  c.innerHTML = '';
+  agents.forEach(a => {
+    const d = document.createElement('div');
+    const isDead = a.hp <= 0;
+    d.className = 'acard' + (a.thinking ? ' thinking' : '') + (isDead ? ' dead' : '');
+    const rl = (a.reputationLabel || 'Neutral').toLowerCase();
+    const hpPct = Math.max(0, Math.min(100, (a.hp / a.maxHp) * 100));
+    const hpColor = hpPct > 60 ? '#0c0' : hpPct > 30 ? '#fa0' : '#f33';
+    d.innerHTML =
+      `<div class="acard-top">` +
+        `<span class="acard-name" style="color:${fColor(a.faction)}">${fEmoji(a.faction)} ${esc(a.name)} <span class="rep ${rl}">${a.reputationLabel||'Neutral'}</span></span>` +
+        `<span class="acard-role">${esc(a.role)} Lv${a.level||1}</span>` +
+      `</div>` +
+      `<div class="acard-hp">` +
+        `<div class="acard-hp-bar"><div class="acard-hp-fill" style="width:${hpPct}%;background:${hpColor}"></div></div>` +
+        `<span class="acard-hp-text">${a.hp} / ${a.maxHp}</span>` +
+      `</div>` +
+      `<div class="acard-stats">` +
+        `<span>⚔️ ${a.kills} kills</span>` +
+        `<span>🏆 ${a.score||0}</span>` +
+        `<span>${EM_MAP[a.emotion]||'😐'} ${a.emotion||'neutral'}</span>` +
+        `<span>${ST_MAP[a.state]||'Idle'}</span>` +
+      `</div>` +
+      (a.lastThought ? `<div class="acard-thought">"${esc(a.lastThought)}"</div>` : '');
+    d.onclick = () => showAgentDetail(a);
+    c.appendChild(d);
+  });
+}
+
+// ═══════════════════════════════════════════════
+// RENDERING (auto-fit camera)
+// ═══════════════════════════════════════════════
+function getScale() {
+  if (!canvas.width || !mapWidth) return 1;
+  const sx = canvas.width / (mapWidth * tileSize);
+  const sy = canvas.height / (mapHeight * tileSize);
+  return Math.min(sx, sy) * zoomLevel;
+}
+// Smooth camera position (lerps toward target)
+let _camX = 0, _camY = 0;
+function getCam() {
+  const scale = getScale();
+  const viewW = canvas.width / scale / tileSize;
+  const viewH = canvas.height / scale / tileSize;
+
+  let targetX, targetY;
+
+  // If following an agent, center on them
+  if (followAgentId && gameState) {
+    const a = gameState.agents.find(x => x.id === followAgentId);
+    if (a) {
+      const pos = getAgentRenderPos(a);
+      targetX = pos.x - viewW / 2 + camOffsetX;
+      targetY = pos.y - viewH / 2 + camOffsetY;
+    }
+  }
+
+  // Free camera (no follow) — pan offset is the camera center
+  if (targetX == null) {
+    targetX = camOffsetX;
+    targetY = camOffsetY;
+  }
+
+  // Clamp to map bounds
+  targetX = Math.max(0, Math.min(targetX, mapWidth - viewW));
+  targetY = Math.max(0, Math.min(targetY, mapHeight - viewH));
+
+  // Smooth camera lerp
+  _camX += (targetX - _camX) * 0.1;
+  _camY += (targetY - _camY) * 0.1;
+  return { x: _camX, y: _camY };
+}
+
+function render() {
+  fitCanvas();
+  const w = canvas.width, h = canvas.height;
+  if (!w || !h) return;
+
+  // Clear
+  ctx.fillStyle = '#060810';
+  ctx.fillRect(0, 0, w, h);
+
+  // Always draw status overlay (even without game state)
+  drawStatusOverlay();
+
+  if (!gameState) return;
+
+  const scale = getScale();
+  const cam = getCam();
+
+  // Screen shake
+  let shakeX = 0, shakeY = 0;
+  if (shakeIntensity > 0.5) {
+    shakeX = (Math.random() - 0.5) * shakeIntensity;
+    shakeY = (Math.random() - 0.5) * shakeIntensity;
+    shakeIntensity *= shakeDecay;
+  } else { shakeIntensity = 0; }
+
+  ctx.save();
+  ctx.translate(shakeX, shakeY);
+  ctx.scale(scale, scale);
+  ctx.translate(-cam.x * tileSize, -cam.y * tileSize);
+
+  // Frustum culling bounds (visible tile range)
+  const viewL = Math.max(0, Math.floor(cam.x) - 1);
+  const viewT = Math.max(0, Math.floor(cam.y) - 1);
+  const viewR = Math.min(mapWidth, Math.ceil(cam.x + w / scale / tileSize) + 1);
+  const viewB = Math.min(mapHeight, Math.ceil(cam.y + h / scale / tileSize) + 1);
+
+  // Map (pre-rendered terrain atlas)
+  try { if (worldMap) drawMapAtlas(viewL, viewT, viewR, viewB); } catch(e) { _lastRenderError = 'drawMap: ' + e.message; }
+
+  // Territory overlay
+  try { drawTerritoryOverlay(); } catch(e) {}
+
+  // Capture zones (enhanced territory visualization)
+  (gameState.capZones || []).forEach(z => {
+    const x = z.x * tileSize, y = z.y * tileSize;
+    const col = z.owner ? fColor(z.owner) : '#ffd700';
+    const zx = x - tileSize*2, zy = y - tileSize*2, zw = tileSize*5, zh = tileSize*5;
+
+    // Ground tint (very subtle)
+    ctx.globalAlpha = z.owner ? 0.12 : 0.06;
+    ctx.fillStyle = col;
+    ctx.fillRect(zx, zy, zw, zh);
+
+    // Dashed border
+    ctx.globalAlpha = 0.7;
+    ctx.strokeStyle = col;
+    ctx.lineWidth = 2;
+    ctx.setLineDash([6, 4]);
+    ctx.strokeRect(zx, zy, zw, zh);
+    ctx.setLineDash([]);
+    ctx.globalAlpha = 1;
+
+    // Zone name label with background
+    ctx.font = 'bold 10px Arial';
+    ctx.textAlign = 'center';
+    const nameW = ctx.measureText(z.name || '').width + 10;
+    ctx.fillStyle = 'rgba(0,0,0,0.7)';
+    ctx.fillRect(x + tileSize/2 - nameW/2, zy - 14, nameW, 14);
+    ctx.fillStyle = col;
+    ctx.fillText(z.name || '', x + tileSize/2, zy - 3);
+
+    // Capture progress bar (if being captured)
+    if (z.progress > 0 && z.progress < 1) {
+      const barW = zw * 0.6;
+      const barX = zx + (zw - barW) / 2;
+      ctx.fillStyle = 'rgba(0,0,0,0.6)';
+      ctx.fillRect(barX, zy + zh + 3, barW, 5);
+      ctx.fillStyle = col;
+      ctx.fillRect(barX, zy + zh + 3, barW * z.progress, 5);
+    }
+
+    // Owner icon
+    if (z.owner) {
+      ctx.font = 'bold 8px Arial';
+      ctx.fillStyle = col;
+      ctx.fillText(z.owner.charAt(0).toUpperCase(), x + tileSize/2, y + tileSize*3 + 6);
+    }
+    ctx.textAlign = 'left';
+  });
+
+  // Items
+  (gameState.items || []).forEach(it => {
+    if (it.value <= 0) return;
+    const x = it.x * tileSize, y = it.y * tileSize;
+    const cx2 = x + tileSize / 2, cy2 = y + tileSize / 2;
+    switch (it.type) {
+      case 'gold':
+        ctx.shadowColor = '#ffd700'; ctx.shadowBlur = 6;
+        ctx.fillStyle = '#ffd700';
+        ctx.beginPath();
+        ctx.moveTo(cx2, y+3); ctx.lineTo(x+tileSize-4, cy2);
+        ctx.lineTo(cx2, y+tileSize-3); ctx.lineTo(x+4, cy2);
+        ctx.closePath(); ctx.fill();
+        break;
+      case 'food':
+        ctx.shadowColor = '#33ff88'; ctx.shadowBlur = 5;
+        ctx.fillStyle = '#33ff88';
+        ctx.beginPath(); ctx.arc(cx2, cy2, 4, 0, Math.PI*2); ctx.fill();
+        break;
+      case 'wood':
+        ctx.shadowColor = '#8B5A2B'; ctx.shadowBlur = 4;
+        ctx.fillStyle = '#8B5A2B';
+        ctx.fillRect(cx2-4, cy2-4, 8, 8);
+        ctx.fillStyle = '#6B3A1B';
+        ctx.fillRect(cx2-2, cy2-2, 4, 4);
+        break;
+      case 'stone':
+        ctx.shadowColor = '#888'; ctx.shadowBlur = 4;
+        ctx.fillStyle = '#888888';
+        ctx.beginPath();
+        ctx.moveTo(cx2, y+3); ctx.lineTo(x+tileSize-4, y+tileSize-4);
+        ctx.lineTo(x+4, y+tileSize-4);
+        ctx.closePath(); ctx.fill();
+        break;
+      default:
+        ctx.fillStyle = '#ffd700';
+        ctx.beginPath(); ctx.arc(cx2, cy2, 3, 0, Math.PI*2); ctx.fill();
+    }
+    ctx.shadowBlur = 0;
+  });
+
+  // Points of Interest (POIs)
+  (gameState.pois || []).forEach(poi => {
+    const px = poi.x * tileSize + tileSize/2;
+    const py = poi.y * tileSize + tileSize/2;
+    const t = Date.now() / 1000;
+    const pulse = 0.5 + Math.sin(t * 2 + poi.x) * 0.3;
+    var g; // reusable gradient variable
+
+    if (poi.type === 'healing_spring') {
+      ctx.globalAlpha = 0.15 + pulse * 0.1;
+      g = ctx.createRadialGradient(px, py, 2, px, py, tileSize * poi.radius);
+      g.addColorStop(0, '#00ffaa');
+      g.addColorStop(1, 'rgba(0,200,255,0)');
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.arc(px, py, tileSize * poi.radius, 0, Math.PI*2); ctx.fill();
+      ctx.globalAlpha = 0.8;
+      ctx.fillStyle = '#00ddff';
+      ctx.beginPath(); ctx.arc(px, py, 3 + pulse*2, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#fff';
+      var sparkX = px + Math.cos(t*3)*8, sparkY = py + Math.sin(t*3)*8;
+      ctx.beginPath(); ctx.arc(sparkX, sparkY, 1.5, 0, Math.PI*2); ctx.fill();
+      ctx.globalAlpha = 1;
+      ctx.font = '7px Arial'; ctx.textAlign = 'center'; ctx.fillStyle = '#00ddff';
+      ctx.fillText('Healing Spring', px, py - tileSize * poi.radius - 4);
+      ctx.textAlign = 'left';
+    } else if (poi.type === 'resource_node') {
+      ctx.globalAlpha = 0.2 + pulse * 0.1;
+      g = ctx.createRadialGradient(px, py, 2, px, py, tileSize * poi.radius);
+      g.addColorStop(0, '#ffaa00');
+      g.addColorStop(1, 'rgba(255,170,0,0)');
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.arc(px, py, tileSize * poi.radius, 0, Math.PI*2); ctx.fill();
+      ctx.globalAlpha = 0.9;
+      ctx.fillStyle = '#8B6914';
+      ctx.fillRect(px-5, py-2, 6, 4);
+      ctx.fillStyle = '#ffd700';
+      ctx.fillRect(px+1, py-4, 4, 3);
+      ctx.fillStyle = '#aa7733';
+      ctx.fillRect(px-3, py+1, 5, 3);
+      ctx.globalAlpha = 1;
+      ctx.font = '7px Arial'; ctx.textAlign = 'center'; ctx.fillStyle = '#ffaa00';
+      ctx.fillText('Resource Node', px, py - tileSize * poi.radius - 4);
+      ctx.textAlign = 'left';
+    } else if (poi.type === 'watch_tower') {
+      ctx.globalAlpha = 0.15;
+      ctx.fillStyle = '#aaaaff';
+      ctx.beginPath(); ctx.arc(px, py, tileSize * poi.radius, 0, Math.PI*2); ctx.fill();
+      ctx.globalAlpha = 1;
+      ctx.fillStyle = '#777';
+      ctx.fillRect(px-3, py-8, 6, 16);
+      ctx.fillStyle = '#999';
+      ctx.fillRect(px-5, py-10, 10, 3);
+      ctx.fillStyle = '#ffdd00';
+      ctx.beginPath(); ctx.arc(px, py-7, 2, 0, Math.PI*2); ctx.fill();
+      ctx.font = '7px Arial'; ctx.textAlign = 'center'; ctx.fillStyle = '#aaa';
+      ctx.fillText('Watch Tower', px, py - 14);
+      ctx.textAlign = 'left';
+    }
+  });
+
+  // Buildings (by type)
+  (gameState.buildings || []).forEach(b => {
+    const x = b.x * tileSize, y = b.y * tileSize;
+    const col = fColor(b.faction);
+    const sz = tileSize * 0.9;
+    const hpPct = b.maxHp > 0 ? Math.max(0, b.hp / b.maxHp) : 1;
+
+    switch (b.type) {
+      case 'wall':
+        // Gray brick rectangle with horizontal lines
+        ctx.fillStyle = '#555';
+        ctx.fillRect(x-sz/2, y-sz*0.3, sz, sz*0.6);
+        ctx.strokeStyle = '#333'; ctx.lineWidth = 1;
+        ctx.strokeRect(x-sz/2, y-sz*0.3, sz, sz*0.6);
+        // Brick lines
+        ctx.strokeStyle = '#444'; ctx.lineWidth = 0.5;
+        ctx.beginPath();
+        ctx.moveTo(x-sz/2, y); ctx.lineTo(x+sz/2, y);
+        ctx.stroke();
+        // Faction tint
+        ctx.fillStyle = col + '44';
+        ctx.fillRect(x-sz/2, y-sz*0.3, sz, sz*0.6);
+        break;
+
+      case 'tower':
+        // Tall triangle with faction-colored flag
+        ctx.fillStyle = '#666';
+        ctx.beginPath();
+        ctx.moveTo(x, y - sz*0.6);
+        ctx.lineTo(x + sz*0.35, y + sz*0.3);
+        ctx.lineTo(x - sz*0.35, y + sz*0.3);
+        ctx.closePath(); ctx.fill();
+        ctx.strokeStyle = '#333'; ctx.lineWidth = 1; ctx.stroke();
+        // Arrow slit
+        ctx.fillStyle = '#222';
+        ctx.fillRect(x-1, y-sz*0.1, 2, sz*0.2);
+        // Flag
+        ctx.fillStyle = col;
+        ctx.fillRect(x+sz*0.1, y-sz*0.6, sz*0.3, sz*0.2);
+        ctx.fillStyle = '#886644'; ctx.fillRect(x+sz*0.1, y-sz*0.6, 1, sz*0.4);
+        break;
+
+      case 'mine':
+        // Brown rectangle with pickaxe icon
+        ctx.fillStyle = '#5a3a1a';
+        ctx.fillRect(x-sz*0.35, y-sz*0.25, sz*0.7, sz*0.5);
+        ctx.strokeStyle = '#3a2210'; ctx.lineWidth = 1;
+        ctx.strokeRect(x-sz*0.35, y-sz*0.25, sz*0.7, sz*0.5);
+        // Pickaxe
+        ctx.strokeStyle = '#aaa'; ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.moveTo(x-3, y+3); ctx.lineTo(x+3, y-3); ctx.stroke();
+        ctx.fillStyle = '#ccc'; ctx.fillRect(x+2, y-5, 3, 3);
+        // Faction tint
+        ctx.fillStyle = col + '33';
+        ctx.fillRect(x-sz*0.35, y-sz*0.25, sz*0.7, sz*0.5);
+        break;
+
+      case 'barracks':
+        // Wide rectangle with tent-like roof
+        ctx.fillStyle = '#4a4a3a';
+        ctx.fillRect(x-sz*0.4, y-sz*0.15, sz*0.8, sz*0.4);
+        // Tent roof
+        ctx.fillStyle = col;
+        ctx.beginPath();
+        ctx.moveTo(x-sz*0.45, y-sz*0.15);
+        ctx.lineTo(x, y-sz*0.45);
+        ctx.lineTo(x+sz*0.45, y-sz*0.15);
+        ctx.closePath(); ctx.fill();
+        ctx.strokeStyle = '#222'; ctx.lineWidth = 0.8; ctx.stroke();
+        // Door
+        ctx.fillStyle = '#222';
+        ctx.fillRect(x-2, y+sz*0.05, 4, sz*0.2);
+        break;
+
+      default:
+        ctx.fillStyle = col;
+        ctx.fillRect(x-sz/2, y-sz/2, sz, sz);
+        ctx.strokeStyle = '#111'; ctx.lineWidth = 1;
+        ctx.strokeRect(x-sz/2, y-sz/2, sz, sz);
+    }
+
+    // HP bar for damaged buildings
+    if (hpPct < 1) {
+      ctx.fillStyle = '#000'; ctx.fillRect(x-sz/2, y+sz*0.35, sz, 3);
+      ctx.fillStyle = hpPct > 0.5 ? '#0c0' : hpPct > 0.25 ? '#cc0' : '#c00';
+      ctx.fillRect(x-sz/2, y+sz*0.35, sz * hpPct, 3);
+    }
+  });
+
+  // Bullets with trails
+  (gameState.bullets || []).forEach(b => {
+    const col = fColor(b.faction);
+    const tx = b.to.x * tileSize, ty = b.to.y * tileSize;
+    const fx = b.from ? b.from.x * tileSize : tx, fy = b.from ? b.from.y * tileSize : ty;
+    // Trail line
+    ctx.strokeStyle = col;
+    ctx.globalAlpha = 0.3;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(fx, fy); ctx.lineTo(tx, ty); ctx.stroke();
+    ctx.globalAlpha = 1;
+    // Projectile glow
+    ctx.shadowColor = col; ctx.shadowBlur = 8;
+    ctx.fillStyle = col;
+    ctx.beginPath(); ctx.arc(tx, ty, 3.5, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#fff';
+    ctx.beginPath(); ctx.arc(tx, ty, 1.5, 0, Math.PI * 2); ctx.fill();
+    ctx.shadowBlur = 0;
+  });
+
+  // Agents
+  try { gameState.agents.forEach(a => drawAgent(a)); } catch(e) { _lastRenderError = 'drawAgent: ' + e.message; }
+
+  // Cooperation lines (use interpolated positions)
+  try {
+    ctx.globalAlpha = 0.2;
+    ctx.lineWidth = 1;
+    const alive = gameState.agents.filter(a => a.hp > 0);
+    alive.forEach(a => {
+      if (a.state !== 'attacking') return;
+      const pa = getAgentRenderPos(a);
+      alive.forEach(b => {
+        if (b.id <= a.id || b.faction !== a.faction || b.state !== 'attacking') return;
+        const pb = getAgentRenderPos(b);
+        const d = Math.hypot(pa.x - pb.x, pa.y - pb.y);
+        if (d < 5) {
+          ctx.strokeStyle = fColor(a.faction);
+          ctx.beginPath();
+          ctx.moveTo(pa.x * tileSize + tileSize/2, pa.y * tileSize + tileSize/2);
+          ctx.lineTo(pb.x * tileSize + tileSize/2, pb.y * tileSize + tileSize/2);
+          ctx.stroke();
+        }
+      });
+    });
+    ctx.globalAlpha = 1;
+  } catch(e) {}
+
+  // Speech bubbles (use interpolated positions)
+  try {
+    gameState.agents.forEach(a => {
+      if (a.speechBubble && a.hp > 0) {
+        const pos = getAgentRenderPos(a);
+        drawSpeechBubble(a, pos.x * tileSize, pos.y * tileSize);
+      }
+    });
+  } catch(e) {}
+
+  // Particles (in world space)
+  try { updateAndDrawParticles(); } catch(e) {}
+
+  // Damage number detection (spawn particles on HP changes)
+  try { detectDamageNumbers(); } catch(e) {}
+
+  ctx.restore();
+
+  // Screen-space overlays (each wrapped for safety)
+  try { drawMinimap(); } catch(e) { _lastRenderError = 'minimap: ' + e.message; }
+  try { drawObjectivesBar(); } catch(e) {}
+  try { drawMilestones(); } catch(e) {}
+
+  if (winData || gameState.winner) {
+    try { drawWinOverlay(winData || gameState.winner); } catch(e) {}
+  }
+
+  // Update detail panel if open
+  if (selectedAgentId) {
+    const a = gameState.agents.find(x => x.id === selectedAgentId);
+    if (a) try { showAgentDetail(a); } catch(e) {}
+  }
+}
+
+// ═══════════════════════════════════════════════
+// OBJECTIVES BAR (top of canvas)
+// ═══════════════════════════════════════════════
+function drawObjectivesBar() {
+  if (!gameState || winData) return;
+  ctx.save();
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+
+  const cw = canvas.width;
+  const barH = 28;
+  // Background
+  ctx.fillStyle = 'rgba(0,0,0,0.65)';
+  ctx.fillRect(0, 0, cw, barH);
+  ctx.fillStyle = 'rgba(255,215,0,0.08)';
+  ctx.fillRect(0, barH - 1, cw, 1);
+
+  ctx.font = '10px Arial';
+  ctx.textAlign = 'left';
+
+  const agents = gameState.agents || [];
+  const zones = gameState.capZones || [];
+
+  // Win condition progress for each faction
+  const factions = ['crimson', 'azure', 'void'];
+  let xOff = 10;
+
+  // Match number
+  ctx.fillStyle = '#888';
+  ctx.font = 'bold 9px Arial';
+  ctx.fillText(`Match #${gameState.matchNum || 1}`, xOff, 18);
+  xOff += 60;
+
+  factions.forEach(f => {
+    const col = fColor(f);
+    const score = agents.filter(a => a.faction === f).reduce((s,a) => s + (a.score||0), 0);
+    const zonesOwned = zones.filter(z => z.owner === f).length;
+    const aliveCount = agents.filter(a => a.faction === f && a.hp > 0).length;
+
+    // Faction pill
+    ctx.fillStyle = col;
+    ctx.font = 'bold 9px Arial';
+    ctx.fillText(f.charAt(0).toUpperCase(), xOff, 12);
+    xOff += 10;
+
+    // Score progress (out of 3000)
+    ctx.fillStyle = '#555';
+    ctx.fillRect(xOff, 5, 60, 6);
+    const scorePct = Math.min(1, score / 3000);
+    ctx.fillStyle = col;
+    ctx.fillRect(xOff, 5, 60 * scorePct, 6);
+    ctx.fillStyle = '#aaa';
+    ctx.font = '8px Arial';
+    ctx.fillText(`${score}/3k`, xOff + 2, 20);
+    xOff += 64;
+
+    // Zones
+    ctx.fillStyle = '#aaa';
+    const totalZones = (gameState.capZones || []).length || 5;
+    ctx.fillText(`Z:${zonesOwned}/${totalZones}`, xOff, 12);
+    xOff += 28;
+
+    // Alive
+    ctx.fillText(`A:${aliveCount}`, xOff, 12);
+    xOff += 24;
+
+    xOff += 12; // gap between factions
+  });
+
+  // Tick / time
+  ctx.fillStyle = '#666';
+  ctx.font = '8px Arial';
+  ctx.textAlign = 'right';
+  const mins = Math.floor(gameState.tick / 1200);
+  const secs = Math.floor((gameState.tick % 1200) / 20);
+  ctx.fillText(`${mins}:${secs.toString().padStart(2,'0')} | Tick ${gameState.tick}`, cw - 10, 18);
+
+  ctx.textAlign = 'left';
+  ctx.restore();
+}
+
+// ═══════════════════════════════════════════════
+// MILESTONE ANNOUNCEMENTS
+// ═══════════════════════════════════════════════
+const milestones = []; // { text, color, addedAt }
+let lastMilestoneCheck = {};
+
+function checkMilestones() {
+  if (!gameState) return;
+  const agents = gameState.agents || [];
+  const zones = gameState.capZones || [];
+  const tick = gameState.tick || 0;
+
+  // First blood
+  if (!lastMilestoneCheck.firstBlood) {
+    const killer = agents.find(a => (a.kills || 0) > 0);
+    if (killer) {
+      lastMilestoneCheck.firstBlood = true;
+      addMilestone(`FIRST BLOOD: ${killer.name}!`, fColor(killer.faction));
+    }
+  }
+
+  // Zone captures (track owner changes)
+  zones.forEach((z, i) => {
+    const key = `zone_${i}`;
+    if (lastMilestoneCheck[key] !== z.owner && z.owner) {
+      lastMilestoneCheck[key] = z.owner;
+      addMilestone(`${z.name} captured by ${z.owner.toUpperCase()}!`, fColor(z.owner));
+    }
+  });
+
+  // Level milestones
+  agents.forEach(a => {
+    const key = `lvl_${a.name}`;
+    if (a.level >= 4 && lastMilestoneCheck[key] !== a.level) {
+      lastMilestoneCheck[key] = a.level;
+      addMilestone(`${a.name} reached Level ${a.level}!`, '#ffd700');
+    }
+  });
+
+  // Approaching victory (any faction at 80%+ score)
+  ['crimson', 'azure', 'void'].forEach(f => {
+    const score = agents.filter(a => a.faction === f).reduce((s,a) => s + (a.score||0), 0);
+    const key = `near_win_${f}`;
+    if (score >= 1600 && !lastMilestoneCheck[key]) {
+      lastMilestoneCheck[key] = true;
+      addMilestone(`${f.toUpperCase()} approaching VICTORY!`, fColor(f));
+    }
+  });
+}
+
+function addMilestone(text, color) {
+  milestones.push({ text, color, addedAt: Date.now() });
+  if (milestones.length > 5) milestones.shift();
+}
+
+function drawMilestones() {
+  if (milestones.length === 0) return;
+  ctx.save();
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+
+  const cw = canvas.width;
+  const now = Date.now();
+  let yOff = 50;
+
+  milestones.forEach((m, i) => {
+    const age = (now - m.addedAt) / 1000;
+    if (age > 4) return; // expire after 4 seconds
+    const alpha = age > 3 ? 1 - (age - 3) : (age < 0.3 ? age / 0.3 : 1);
+
+    ctx.globalAlpha = alpha;
+    ctx.textAlign = 'center';
+    ctx.font = 'bold 16px Arial';
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth = 3;
+    ctx.strokeText(m.text, cw/2, yOff);
+    ctx.fillStyle = m.color;
+    ctx.fillText(m.text, cw/2, yOff);
+    yOff += 24;
+  });
+
+  ctx.globalAlpha = 1;
+  ctx.textAlign = 'left';
+  ctx.restore();
+
+  // Clean expired
+  while (milestones.length > 0 && Date.now() - milestones[0].addedAt > 5000) {
+    milestones.shift();
+  }
+}
+
+function drawWinOverlay(w) {
+  const cw = canvas.width, ch = canvas.height;
+  // Semi-transparent overlay
+  ctx.save();
+  ctx.setTransform(1, 0, 0, 1, 0, 0); // reset transform
+  ctx.fillStyle = 'rgba(0,0,0,0.75)';
+  ctx.fillRect(0, 0, cw, ch);
+
+  const faction = w.faction;
+  const col = fColor(faction);
+  const name = w.factionName || faction;
+  const condition = (w.condition || '').toUpperCase();
+
+  // Victory text
+  ctx.textAlign = 'center';
+  ctx.fillStyle = col;
+  ctx.shadowColor = col; ctx.shadowBlur = 20;
+  ctx.font = 'bold 48px Arial';
+  ctx.fillText('VICTORY', cw/2, ch/2 - 40);
+
+  ctx.shadowBlur = 10;
+  ctx.font = 'bold 28px Arial';
+  ctx.fillText(name, cw/2, ch/2 + 10);
+
+  ctx.shadowBlur = 0;
+  ctx.fillStyle = '#ccc';
+  ctx.font = '16px Arial';
+  ctx.fillText(`Won by ${condition}`, cw/2, ch/2 + 45);
+
+  // Match number
+  if (w.matchNum) {
+    ctx.fillStyle = '#888';
+    ctx.font = '12px Arial';
+    ctx.fillText(`Match #${w.matchNum}`, cw/2, ch/2 + 68);
+  }
+
+  // Scores
+  if (w.scores) {
+    let yOff = ch/2 + 95;
+    ctx.font = '14px Arial';
+    for (const [f, score] of Object.entries(w.scores)) {
+      ctx.fillStyle = fColor(f);
+      ctx.fillText(`${f}: ${score} pts`, cw/2, yOff);
+      yOff += 22;
+    }
+  }
+
+  // MVP
+  if (w.mvp) {
+    ctx.fillStyle = '#ffd700';
+    ctx.font = 'bold 14px Arial';
+    const mvpModel = (w.mvp.model || '').replace(/^(openai|anthropic|google|meta-llama|mistralai|deepseek)\//i, '').slice(0, 20);
+    ctx.fillText(`MVP: ${w.mvp.name} (${mvpModel}) — ${w.mvp.score} pts`, cw/2, ch/2 + 170);
+  }
+
+  // Top agents
+  if (w.agentStats) {
+    const top = [...w.agentStats].sort((a,b) => b.score - a.score).slice(0, 5);
+    let yOff = ch/2 + 200;
+    ctx.font = '11px Arial';
+    ctx.fillStyle = '#aaa';
+    ctx.fillText('Top Agents:', cw/2, yOff); yOff += 18;
+    top.forEach((a, i) => {
+      ctx.fillStyle = fColor(a.faction);
+      const m = (a.model||'').replace(/^(openai|anthropic|google|meta-llama|mistralai|deepseek)\//i,'').slice(0,15);
+      ctx.fillText(`${i+1}. ${a.name} [${m}] K:${a.kills} D:${a.deaths||0} Score:${a.score}`, cw/2, yOff);
+      yOff += 16;
+    });
+  }
+
+  // Countdown
+  if (winCountdown > 0) {
+    ctx.fillStyle = '#888';
+    ctx.font = '13px Arial';
+    ctx.fillText(`Restarting in ${winCountdown}s...`, cw/2, ch - 30);
+  }
+
+  ctx.textAlign = 'left';
+  ctx.restore();
+}
+
+// ── Build terrain atlas (offscreen canvas, drawn once) ──
+function buildTerrainAtlas() {
+  if (!worldMap) return;
+  terrainCanvas = document.createElement('canvas');
+  terrainCanvas.width = mapWidth * tileSize;
+  terrainCanvas.height = mapHeight * tileSize;
+  terrainCtx = terrainCanvas.getContext('2d');
+
+  // Seeded random for consistent decorations
+  function seededRand(x, y, s) { let v = Math.sin(x * 127.1 + y * 311.7 + s * 53.3) * 43758.5453; return v - Math.floor(v); }
+
+  for (let y = 0; y < mapHeight; y++) {
+    for (let x = 0; x < mapWidth; x++) {
+      const c = worldMap[y]?.[x]; if (!c) continue;
+      const px = x * tileSize, py = y * tileSize;
+      const h = c.height || 0.5;
+
+      switch (c.type) {
+        case 'grass': {
+          // Multi-shade grass with height variation
+          const r = Math.floor(22 + h * 28 + seededRand(x, y, 1) * 8);
+          const g = Math.floor(48 + h * 35 + seededRand(x, y, 2) * 10);
+          const b = Math.floor(24 + h * 20 + seededRand(x, y, 3) * 6);
+          terrainCtx.fillStyle = `rgb(${r},${g},${b})`;
+          terrainCtx.fillRect(px, py, tileSize, tileSize);
+          // Grass tufts (~25% of tiles)
+          if (seededRand(x, y, 10) > 0.75) {
+            terrainCtx.strokeStyle = `rgba(${r+20},${g+25},${b+10},0.5)`;
+            terrainCtx.lineWidth = 0.8;
+            const gx = px + seededRand(x, y, 11) * tileSize * 0.7 + 2;
+            const gy = py + seededRand(x, y, 12) * tileSize * 0.5 + tileSize * 0.3;
+            terrainCtx.beginPath();
+            terrainCtx.moveTo(gx, gy); terrainCtx.lineTo(gx - 1, gy - 4);
+            terrainCtx.moveTo(gx + 2, gy); terrainCtx.lineTo(gx + 3, gy - 3.5);
+            terrainCtx.stroke();
+          }
+          // Small flowers (~8% of tiles)
+          if (seededRand(x, y, 20) > 0.92) {
+            const colors = ['#ff6688', '#ffdd44', '#88aaff', '#ff88dd'];
+            terrainCtx.fillStyle = colors[Math.floor(seededRand(x, y, 21) * 4)];
+            const fx = px + seededRand(x, y, 22) * (tileSize - 4) + 2;
+            const fy = py + seededRand(x, y, 23) * (tileSize - 4) + 2;
+            terrainCtx.beginPath(); terrainCtx.arc(fx, fy, 1.2, 0, Math.PI * 2); terrainCtx.fill();
+          }
+          // Small rocks (~10%)
+          if (seededRand(x, y, 30) > 0.90) {
+            terrainCtx.fillStyle = `rgba(${90+h*30},${85+h*25},${80+h*20},0.6)`;
+            const rx = px + seededRand(x, y, 31) * (tileSize - 6) + 3;
+            const ry = py + seededRand(x, y, 32) * (tileSize - 6) + 3;
+            terrainCtx.beginPath(); terrainCtx.arc(rx, ry, 1.5 + seededRand(x, y, 33), 0, Math.PI * 2); terrainCtx.fill();
+          }
+          break;
+        }
+        case 'forest': {
+          // Dark forest ground
+          terrainCtx.fillStyle = `rgb(${12+h*10},${28+h*15},${16+h*8})`;
+          terrainCtx.fillRect(px, py, tileSize, tileSize);
+          // Draw 2-3 mini trees
+          const treeCount = 1 + Math.floor(seededRand(x, y, 40) * 2.5);
+          for (let t = 0; t < treeCount; t++) {
+            const tx = px + seededRand(x, y, 41 + t) * (tileSize - 6) + 3;
+            const ty = py + seededRand(x, y, 42 + t) * (tileSize - 8) + 4;
+            // Trunk
+            terrainCtx.fillStyle = '#3a2510';
+            terrainCtx.fillRect(tx - 0.5, ty, 1.5, 4);
+            // Canopy (triangle)
+            const shade = Math.floor(seededRand(x, y, 43 + t) * 30);
+            terrainCtx.fillStyle = `rgb(${15+shade},${50+shade},${20+shade/2})`;
+            terrainCtx.beginPath();
+            terrainCtx.moveTo(tx + 0.5, ty - 3);
+            terrainCtx.lineTo(tx + 4, ty + 1);
+            terrainCtx.lineTo(tx - 3, ty + 1);
+            terrainCtx.closePath();
+            terrainCtx.fill();
+          }
+          break;
+        }
+        case 'mountain': {
+          // Rocky mountain base
+          const mr = Math.floor(42 + h * 20);
+          const mg = Math.floor(38 + h * 18);
+          const mb = Math.floor(48 + h * 22);
+          terrainCtx.fillStyle = `rgb(${mr},${mg},${mb})`;
+          terrainCtx.fillRect(px, py, tileSize, tileSize);
+          // Layered rock shape
+          terrainCtx.fillStyle = `rgb(${mr+15},${mg+12},${mb+18})`;
+          terrainCtx.beginPath();
+          terrainCtx.moveTo(px + tileSize * 0.5, py + 1);
+          terrainCtx.lineTo(px + tileSize - 2, py + tileSize - 2);
+          terrainCtx.lineTo(px + 2, py + tileSize - 2);
+          terrainCtx.closePath();
+          terrainCtx.fill();
+          // Snow cap
+          if (h > 0.6) {
+            terrainCtx.fillStyle = `rgba(220,225,235,${0.3 + h * 0.3})`;
+            terrainCtx.beginPath();
+            terrainCtx.moveTo(px + tileSize * 0.5, py + 1);
+            terrainCtx.lineTo(px + tileSize * 0.65, py + tileSize * 0.3);
+            terrainCtx.lineTo(px + tileSize * 0.35, py + tileSize * 0.3);
+            terrainCtx.closePath();
+            terrainCtx.fill();
+          }
+          break;
+        }
+        case 'sand': {
+          const sr = Math.floor(82 + h * 20 + seededRand(x, y, 50) * 8);
+          const sg = Math.floor(68 + h * 15 + seededRand(x, y, 51) * 6);
+          const sb = Math.floor(28 + h * 10 + seededRand(x, y, 52) * 4);
+          terrainCtx.fillStyle = `rgb(${sr},${sg},${sb})`;
+          terrainCtx.fillRect(px, py, tileSize, tileSize);
+          // Sand grain dots
+          terrainCtx.fillStyle = `rgba(${sr+15},${sg+12},${sb+8},0.3)`;
+          for (let d = 0; d < 3; d++) {
+            const dx = px + seededRand(x, y, 53 + d) * tileSize;
+            const dy = py + seededRand(x, y, 54 + d) * tileSize;
+            terrainCtx.fillRect(dx, dy, 1, 1);
+          }
+          break;
+        }
+        case 'water': {
+          // Water base (animated separately, draw dark base here)
+          terrainCtx.fillStyle = `rgb(${10+h*8},${30+h*15},${55+h*20})`;
+          terrainCtx.fillRect(px, py, tileSize, tileSize);
+          break;
+        }
+        default:
+          terrainCtx.fillStyle = '#1e2b1c';
+          terrainCtx.fillRect(px, py, tileSize, tileSize);
+      }
+
+      // Subtle grid lines
+      terrainCtx.strokeStyle = 'rgba(0,0,0,0.05)';
+      terrainCtx.lineWidth = 0.5;
+      terrainCtx.strokeRect(px, py, tileSize, tileSize);
+    }
+  }
+  terrainDirty = false;
+}
+
+// ── Draw map using pre-rendered atlas + animated water overlay ──
+function drawMapAtlas(vl, vt, vr, vb) {
+  if (!terrainCanvas || terrainDirty) buildTerrainAtlas();
+  if (!terrainCanvas) return;
+
+  // Blit the visible portion of the atlas
+  const sx = vl * tileSize, sy = vt * tileSize;
+  const sw = (vr - vl) * tileSize, sh = (vb - vt) * tileSize;
+  ctx.drawImage(terrainCanvas, sx, sy, sw, sh, sx, sy, sw, sh);
+
+  // Animated water overlay (only on water tiles in view)
+  const tw = Math.sin(Date.now() / 800) * 0.08;
+  const tw2 = Math.cos(Date.now() / 1200) * 0.05;
+  for (let y = vt; y < vb; y++) {
+    for (let x = vl; x < vr; x++) {
+      const c = worldMap[y]?.[x]; if (!c) continue;
+      if (c.type === 'water') {
+        const px = x * tileSize, py = y * tileSize;
+        ctx.fillStyle = `rgba(100,180,255,${0.06 + tw})`;
+        ctx.fillRect(px, py + (y % 2) * 2, tileSize, 2);
+        ctx.fillStyle = `rgba(60,140,220,${0.04 + tw2})`;
+        ctx.fillRect(px, py + ((y + 1) % 3) * 3 + 6, tileSize, 1.5);
+      }
+    }
+  }
+}
+
+// ── Territory overlay canvas ──
+function drawTerritoryOverlay() {
+  if (!worldMap) return;
+  const now = Date.now();
+  // Rebuild territory canvas every 500ms
+  if (!territoryCanvas || territoryDirty || now - _lastTerritoryRedraw > 500) {
+    if (!territoryCanvas) {
+      territoryCanvas = document.createElement('canvas');
+      territoryCanvas.width = mapWidth * tileSize;
+      territoryCanvas.height = mapHeight * tileSize;
+      territoryCtx = territoryCanvas.getContext('2d');
+    }
+    territoryCtx.clearRect(0, 0, territoryCanvas.width, territoryCanvas.height);
+    for (let y = 0; y < mapHeight; y++) {
+      for (let x = 0; x < mapWidth; x++) {
+        const c = worldMap[y]?.[x];
+        if (!c || !c.owner) continue;
+        const px = x * tileSize, py = y * tileSize;
+        territoryCtx.fillStyle = fColor(c.owner);
+        territoryCtx.globalAlpha = 0.12;
+        territoryCtx.fillRect(px, py, tileSize, tileSize);
+        // Draw border edges where neighbor is different faction
+        territoryCtx.globalAlpha = 0.35;
+        territoryCtx.strokeStyle = fColor(c.owner);
+        territoryCtx.lineWidth = 1;
+        if (x > 0 && worldMap[y][x-1]?.owner !== c.owner) {
+          territoryCtx.beginPath(); territoryCtx.moveTo(px, py); territoryCtx.lineTo(px, py + tileSize); territoryCtx.stroke();
+        }
+        if (x < mapWidth-1 && worldMap[y][x+1]?.owner !== c.owner) {
+          territoryCtx.beginPath(); territoryCtx.moveTo(px+tileSize, py); territoryCtx.lineTo(px+tileSize, py+tileSize); territoryCtx.stroke();
+        }
+        if (y > 0 && worldMap[y-1]?.[x]?.owner !== c.owner) {
+          territoryCtx.beginPath(); territoryCtx.moveTo(px, py); territoryCtx.lineTo(px+tileSize, py); territoryCtx.stroke();
+        }
+        if (y < mapHeight-1 && worldMap[y+1]?.[x]?.owner !== c.owner) {
+          territoryCtx.beginPath(); territoryCtx.moveTo(px, py+tileSize); territoryCtx.lineTo(px+tileSize, py+tileSize); territoryCtx.stroke();
+        }
+      }
+    }
+    territoryCtx.globalAlpha = 1;
+    territoryDirty = false;
+    _lastTerritoryRedraw = now;
+  }
+  ctx.drawImage(territoryCanvas, 0, 0);
+}
+
+// ═══════════════════════════════════════════════
+// PARTICLE SYSTEM
+// ═══════════════════════════════════════════════
+function spawnParticle(x, y, vx, vy, color, life, size, type, text) {
+  if (particles.length >= PARTICLE_MAX) return;
+  particles.push({ x, y, vx, vy, color, life, maxLife: life, size: size || 2, type: type || 'spark', text: text || '' });
+}
+
+function spawnDamageNumber(worldX, worldY, amount, color) {
+  const px = worldX * tileSize + tileSize / 2;
+  const py = worldY * tileSize;
+  spawnParticle(px, py, (Math.random() - 0.5) * 0.5, -1.2, color, 60, amount > 20 ? 12 : 9, 'text', (amount > 0 ? '-' : '+') + Math.abs(amount));
+}
+
+function spawnCombatSparks(worldX, worldY, color, count) {
+  const px = worldX * tileSize + tileSize / 2;
+  const py = worldY * tileSize + tileSize / 2;
+  for (let i = 0; i < count; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const speed = 0.5 + Math.random() * 1.5;
+    spawnParticle(px, py, Math.cos(angle) * speed, Math.sin(angle) * speed, color, 20 + Math.random() * 15, 1.5 + Math.random(), 'spark');
+  }
+}
+
+function triggerScreenShake(intensity) {
+  shakeIntensity = Math.max(shakeIntensity, intensity);
+}
+
+function updateAndDrawParticles() {
+  for (let i = particles.length - 1; i >= 0; i--) {
+    const p = particles[i];
+    p.x += p.vx;
+    p.y += p.vy;
+    p.life--;
+    if (p.life <= 0) { particles.splice(i, 1); continue; }
+
+    const alpha = Math.min(1, p.life / (p.maxLife * 0.3));
+
+    if (p.type === 'text') {
+      ctx.globalAlpha = alpha;
+      ctx.font = `bold ${p.size}px Arial`;
+      ctx.textAlign = 'center';
+      ctx.strokeStyle = '#000';
+      ctx.lineWidth = 2.5;
+      ctx.strokeText(p.text, p.x, p.y);
+      ctx.fillStyle = p.color;
+      ctx.fillText(p.text, p.x, p.y);
+      ctx.textAlign = 'left';
+    } else {
+      // spark / dust
+      ctx.globalAlpha = alpha * 0.8;
+      ctx.fillStyle = p.color;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size * (p.life / p.maxLife), 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+  ctx.globalAlpha = 1;
+}
+
+function detectDamageNumbers() {
+  if (!gameState) return;
+  gameState.agents.forEach(a => {
+    const prevHp = _prevHp.get(a.id);
+    if (prevHp != null && prevHp !== a.hp) {
+      const diff = prevHp - a.hp;
+      if (diff > 0) {
+        // Took damage
+        const color = diff > 20 ? '#ffd700' : '#ff4444';
+        spawnDamageNumber(a.x, a.y, diff, color);
+        spawnCombatSparks(a.x, a.y, fColor(a.faction), Math.min(8, Math.ceil(diff / 5)));
+        // Screen shake for big hits or deaths
+        if (a.hp <= 0) triggerScreenShake(6);
+        else if (diff > 15) triggerScreenShake(3);
+      } else if (diff < 0) {
+        // Healed
+        spawnDamageNumber(a.x, a.y, diff, '#44ff88');
+      }
+    }
+    _prevHp.set(a.id, a.hp);
+  });
+}
+
+// ═══════════════════════════════════════════════
+// PIXEL ART RENDERING SYSTEM
+// ═══════════════════════════════════════════════
+function shadeColor(color, percent) {
+  let R = parseInt(color.substring(1,3), 16);
+  let G = parseInt(color.substring(3,5), 16);
+  let B = parseInt(color.substring(5,7), 16);
+  R = Math.min(255, Math.max(0, Math.floor(R * (100 + percent) / 100)));
+  G = Math.min(255, Math.max(0, Math.floor(G * (100 + percent) / 100)));
+  B = Math.min(255, Math.max(0, Math.floor(B * (100 + percent) / 100)));
+  return '#' + R.toString(16).padStart(2,'0') + G.toString(16).padStart(2,'0') + B.toString(16).padStart(2,'0');
+}
+
+const spriteCache = new Map();
+const SPRITE_W = 28, SPRITE_H = 30;
+
+function buildSprite(faction, role) {
+  const key = `${faction}:${role}`;
+  if (spriteCache.has(key)) return spriteCache.get(key);
+
+  const oc = document.createElement('canvas');
+  oc.width = SPRITE_W; oc.height = SPRITE_H;
+  const cx = oc.getContext('2d');
+  cx.imageSmoothingEnabled = false;
+
+  const color = fColor(faction);
+  const hairColor = shadeColor(color, -30);
+  const legColor = shadeColor(color, -40);
+  const skinColor = '#dcc8a0';
+  const px = 4, py = 2;
+
+  // Hair
+  cx.fillStyle = hairColor;
+  cx.fillRect(px+5, py-1, 14, 4);
+
+  // Head
+  cx.fillStyle = skinColor;
+  cx.fillRect(px+6, py, 12, 11);
+
+  // Eyes (white)
+  cx.fillStyle = '#fff';
+  cx.fillRect(px+8, py+4, 3, 3);
+  cx.fillRect(px+14, py+4, 3, 3);
+
+  // Pupils (black)
+  cx.fillStyle = '#111';
+  cx.fillRect(px+9, py+5, 2, 2);
+  cx.fillRect(px+15, py+5, 2, 2);
+
+  // Body
+  cx.fillStyle = color;
+  cx.fillRect(px+4, py+12, 16, 10);
+
+  // Arms
+  cx.fillRect(px+1, py+12, 3, 7);
+  cx.fillRect(px+20, py+12, 3, 7);
+
+  // Legs
+  cx.fillStyle = legColor;
+  cx.fillRect(px+6, py+22, 5, 5);
+  cx.fillRect(px+13, py+22, 5, 5);
+
+  // Role-specific accessories
+  drawRoleAccessory(cx, role, color, px, py);
+
+  spriteCache.set(key, oc);
+  return oc;
+}
+
+function drawRoleAccessory(cx, role, color, px, py) {
+  switch(role) {
+    case 'warrior':
+      // Sword on right side
+      cx.fillStyle = '#cccccc';
+      cx.fillRect(px+24, py+8, 2, 12);  // blade
+      cx.fillStyle = '#886622';
+      cx.fillRect(px+23, py+13, 4, 2);  // crossguard
+      break;
+    case 'scout':
+      // Bow on left
+      cx.fillStyle = '#886644';
+      cx.fillRect(px-2, py+10, 2, 9);   // bow shaft
+      cx.fillStyle = '#aaaaaa';
+      cx.fillRect(px-1, py+10, 1, 1);   // string top
+      cx.fillRect(px-1, py+18, 1, 1);   // string bottom
+      break;
+    case 'assassin':
+      // Hood extends down sides of head
+      cx.fillStyle = shadeColor(color, -50);
+      cx.fillRect(px+4, py-1, 2, 6);    // left hood side
+      cx.fillRect(px+18, py-1, 2, 6);   // right hood side
+      cx.fillRect(px+5, py-2, 14, 2);   // hood top
+      break;
+    case 'tank':
+      // Armor plate border
+      cx.fillStyle = '#888888';
+      cx.fillRect(px+3, py+12, 1, 10);  // left plate
+      cx.fillRect(px+20, py+12, 1, 10); // right plate
+      cx.fillRect(px+4, py+11, 16, 1);  // top plate
+      // Shoulder pads
+      cx.fillRect(px+0, py+11, 4, 2);
+      cx.fillRect(px+20, py+11, 4, 2);
+      break;
+    case 'mage':
+      // Staff with glowing orb
+      cx.fillStyle = '#886644';
+      cx.fillRect(px-3, py+2, 2, 18);   // staff
+      cx.fillStyle = '#44ddff';
+      cx.fillRect(px-4, py, 4, 4);      // orb
+      cx.fillStyle = '#88eeff';
+      cx.fillRect(px-3, py+1, 2, 2);    // orb shine
+      break;
+    case 'miner':
+      // Pickaxe
+      cx.fillStyle = '#886644';
+      cx.fillRect(px+24, py+8, 2, 10);  // handle
+      cx.fillStyle = '#aaaaaa';
+      cx.fillRect(px+22, py+7, 6, 2);   // pick head
+      cx.fillRect(px+22, py+6, 2, 2);   // pick tip
+      break;
+    case 'builder':
+      // Hammer
+      cx.fillStyle = '#886644';
+      cx.fillRect(px+24, py+10, 2, 8);  // handle
+      cx.fillStyle = '#888888';
+      cx.fillRect(px+22, py+8, 6, 3);   // hammer head
+      break;
+    case 'diplomat':
+      // Scroll
+      cx.fillStyle = '#ffffcc';
+      cx.fillRect(px-3, py+14, 4, 6);   // scroll body
+      cx.fillStyle = '#cccc88';
+      cx.fillRect(px-3, py+13, 4, 1);   // scroll top
+      cx.fillRect(px-3, py+20, 4, 1);   // scroll bottom
+      break;
+    case 'king':
+      // Gold crown
+      cx.fillStyle = '#ffd700';
+      cx.fillRect(px+6, py-4, 12, 3);   // crown base
+      cx.fillRect(px+6, py-6, 2, 2);    // left spike
+      cx.fillRect(px+11, py-7, 2, 3);   // center spike
+      cx.fillRect(px+16, py-6, 2, 2);   // right spike
+      // Gems
+      cx.fillStyle = '#ff2244';
+      cx.fillRect(px+11, py-5, 2, 2);   // center gem
+      break;
+  }
+}
+
+// Avatar image cache
+const avatarCache = new Map();
+function loadAvatar(url) {
+  if (avatarCache.has(url)) return avatarCache.get(url);
+  const entry = { img: new Image(), loaded: false, error: false };
+  entry.img.crossOrigin = 'anonymous';
+  entry.img.onload = () => { entry.loaded = true; };
+  entry.img.onerror = () => { entry.error = true; };
+  entry.img.src = url;
+  avatarCache.set(url, entry);
+  return entry;
+}
+
+// Emotion emoji map
+const EMOTION_EMOJI = {
+  angry: '😠', afraid: '😰', happy: '😊', ambitious: '🔥',
+  grief: '😢', love: '💕', hate: '💢'
+};
+
+// ═══════════════════════════════════════════════
+// SPEECH BUBBLE SYSTEM
+// ═══════════════════════════════════════════════
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  ctx.lineTo(x + r, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
+}
+
+function drawSpeechBubble(a, x, y) {
+  if (!a.speechBubble) return;
+  const text = a.speechBubble.text;
+  const tickAge = (gameState.tick || 0) - (a.speechBubble.tick || 0);
+  const age = tickAge / 20; // seconds
+  if (age > 6 || age < 0) return;
+
+  // Fade out in the last 1.5 seconds
+  const alpha = age > 4.5 ? 1 - (age - 4.5) / 1.5 : 1;
+  ctx.save();
+  ctx.globalAlpha = alpha;
+
+  // Measure and wrap text
+  ctx.font = 'bold 9px Arial';
+  const maxW = 130;
+  const metrics = ctx.measureText(text);
+  const textW = Math.min(metrics.width, maxW);
+
+  // Wrap text into lines if needed
+  let lines = [];
+  if (metrics.width > maxW) {
+    const words = text.split(' ');
+    let line = '';
+    for (const word of words) {
+      const test = line ? line + ' ' + word : word;
+      if (ctx.measureText(test).width > maxW && line) {
+        lines.push(line);
+        line = word;
+      } else {
+        line = test;
+      }
+    }
+    if (line) lines.push(line);
+  } else {
+    lines = [text];
+  }
+
+  const lineH = 12;
+  const pad = 6;
+  const bw = Math.min(metrics.width + pad * 2, maxW + pad * 2);
+  const bh = lines.length * lineH + pad * 2 - 2;
+  const bx = x + tileSize / 2 - bw / 2;
+  const by = y - 20 - bh;
+
+  // Bubble background
+  ctx.fillStyle = 'rgba(0,0,0,0.88)';
+  roundRect(ctx, bx, by, bw, bh, 5);
+  ctx.fill();
+
+  // Faction-colored border
+  ctx.strokeStyle = fColor(a.faction);
+  ctx.lineWidth = 1.5;
+  roundRect(ctx, bx, by, bw, bh, 5);
+  ctx.stroke();
+
+  // Pointer triangle
+  ctx.fillStyle = 'rgba(0,0,0,0.88)';
+  ctx.beginPath();
+  ctx.moveTo(x + tileSize / 2 - 5, by + bh);
+  ctx.lineTo(x + tileSize / 2, by + bh + 6);
+  ctx.lineTo(x + tileSize / 2 + 5, by + bh);
+  ctx.fill();
+  // Triangle border
+  ctx.strokeStyle = fColor(a.faction);
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(x + tileSize / 2 - 5, by + bh);
+  ctx.lineTo(x + tileSize / 2, by + bh + 6);
+  ctx.lineTo(x + tileSize / 2 + 5, by + bh);
+  ctx.stroke();
+
+  // Text
+  ctx.fillStyle = '#fff';
+  ctx.textAlign = 'center';
+  ctx.font = 'bold 9px Arial';
+  lines.forEach((line, i) => {
+    ctx.fillText(line, bx + bw / 2, by + pad + lineH * i + 10);
+  });
+
+  ctx.textAlign = 'left';
+  ctx.restore();
+}
+
+// Get smoothly interpolated position for an agent
+function getAgentRenderPos(a) {
+  const prev = _prevPositions.get(a.id);
+  const target = { x: a.x, y: a.y };
+  if (!prev) {
+    _renderPositions.set(a.id, { x: a.x, y: a.y });
+    return target;
+  }
+  const elapsed = performance.now() - _lastStateTime;
+  const t = Math.min(1, elapsed / _stateInterval); // 0→1 between server updates
+  const smooth = t * t * (3 - 2 * t); // smoothstep for natural easing
+  const rx = prev.x + (target.x - prev.x) * smooth;
+  const ry = prev.y + (target.y - prev.y) * smooth;
+  _renderPositions.set(a.id, { x: rx, y: ry });
+  return { x: rx, y: ry };
+}
+
+function drawAgent(a) {
+  const pos = getAgentRenderPos(a);
+  const x = pos.x*tileSize, y = pos.y*tileSize;
+  const col = fColor(a.faction);
+  const isMe = a.id === myAgentId;
+  const isDead = a.hp <= 0;
+  const cx2 = tileSize/2;  // center x offset
+
+  // Selection ring
+  if (isMe) {
+    ctx.strokeStyle = '#ffd700'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(x+cx2, y+cx2, tileSize*1.0, 0, Math.PI*2); ctx.stroke();
+  }
+  // Follow ring
+  if (a.id === followAgentId) {
+    ctx.strokeStyle = '#fff'; ctx.lineWidth = 1; ctx.setLineDash([3,3]);
+    ctx.beginPath(); ctx.arc(x+cx2, y+cx2, tileSize*1.1, 0, Math.PI*2); ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  // Dead agent: skull emoji
+  if (isDead) {
+    ctx.font = `${tileSize}px Arial`; ctx.textAlign = 'center';
+    ctx.fillText('💀', x+cx2, y+tileSize-2);
+    ctx.textAlign = 'left';
+    return;
+  }
+
+  // Shadow glow
+  ctx.shadowColor = col; ctx.shadowBlur = 6;
+
+  // Priority 1: Custom avatar image
+  if (a.avatar) {
+    const av = loadAvatar(a.avatar);
+    if (av.loaded && !av.error) {
+      ctx.drawImage(av.img, x, y, tileSize, tileSize);
+      ctx.shadowBlur = 0;
+    } else {
+      // Avatar loading or failed — draw pixel art
+      drawPixelBody(a, x, y);
+    }
+  } else {
+    // Priority 2: Pixel art body
+    drawPixelBody(a, x, y);
+  }
+
+  ctx.shadowBlur = 0;
+
+  // ─── Overlays (drawn on top of both avatar and pixel art) ───
+
+  // HP bar
+  const hpPct = Math.max(0, a.hp / a.maxHp);
+  ctx.fillStyle = '#000'; ctx.fillRect(x-1, y-7, tileSize+2, 5);
+  ctx.fillStyle = hpPct > 0.6 ? '#00cc44' : hpPct > 0.3 ? '#cccc00' : '#cc0000';
+  ctx.fillRect(x, y-6, tileSize*hpPct, 3);
+
+  // Name + Model label
+  ctx.textAlign = 'center';
+  // Name with outline for readability
+  ctx.font = 'bold 9px Arial';
+  ctx.strokeStyle = '#000'; ctx.lineWidth = 2.5;
+  ctx.strokeText(a.name, x+cx2, y-10);
+  ctx.fillStyle = '#fff';
+  ctx.fillText(a.name, x+cx2, y-10);
+  // Model label (show when zoomed in enough)
+  if (tileSize >= 16 && a.model) {
+    const shortModel = (a.model || '').replace(/^(openai|anthropic|google|meta-llama|mistralai|deepseek)\//i, '').slice(0, 18);
+    ctx.font = '7px Arial';
+    ctx.strokeStyle = '#000'; ctx.lineWidth = 2;
+    ctx.strokeText(shortModel, x+cx2, y-18);
+    ctx.fillStyle = '#aaa';
+    ctx.fillText(shortModel, x+cx2, y-18);
+  }
+
+  // Level badge
+  if (a.level > 1) {
+    ctx.fillStyle = '#ffd700'; ctx.font = 'bold 7px Arial'; ctx.textAlign = 'right';
+    ctx.fillText('L'+a.level, x+tileSize+1, y+0);
+  }
+
+  // Emotion indicator
+  const emo = EMOTION_EMOJI[a.emotion];
+  if (emo) {
+    ctx.font = '8px Arial'; ctx.textAlign = 'left';
+    ctx.fillText(emo, x+tileSize+1, y+tileSize-2);
+  }
+
+  // AI thinking indicator (enhanced)
+  if (a.thinking) {
+    const t = Date.now() / 400;
+    // Animated thought dots (cycling ●●●)
+    const dots = '.'.repeat(1 + Math.floor(t % 3));
+    ctx.font = 'bold 8px Arial'; ctx.textAlign = 'left';
+    ctx.fillStyle = '#ffd700';
+    ctx.fillText('AI' + dots, x + tileSize + 1, y + 8);
+    // Brain wave rings
+    ctx.globalAlpha = 0.15 + Math.sin(t) * 0.1;
+    ctx.strokeStyle = '#ffd700';
+    ctx.lineWidth = 0.8;
+    const r1 = tileSize * 0.8 + Math.sin(t) * 3;
+    ctx.beginPath(); ctx.arc(x + cx2, y + cx2, r1, 0, Math.PI * 2); ctx.stroke();
+    ctx.globalAlpha = 0.08 + Math.sin(t + 1) * 0.05;
+    const r2 = tileSize * 1.1 + Math.sin(t + 1) * 3;
+    ctx.beginPath(); ctx.arc(x + cx2, y + cx2, r2, 0, Math.PI * 2); ctx.stroke();
+    ctx.globalAlpha = 1;
+  }
+
+  // LLM-powered agent glow (distinct golden outline)
+  if (a.model && a.model !== 'fallback' && a.model !== 'fallback-ai') {
+    ctx.globalAlpha = 0.2 + Math.sin(Date.now() / 1000 + a.x) * 0.08;
+    ctx.strokeStyle = '#ffd700';
+    ctx.lineWidth = 1.2;
+    ctx.beginPath(); ctx.arc(x + cx2, y + cx2, tileSize * 0.7, 0, Math.PI * 2); ctx.stroke();
+    ctx.globalAlpha = 1;
+  }
+
+  // ─── COMBAT EFFECT: flashing swords when attacking ───
+  if (a.state === 'attacking') {
+    const t = Date.now() / 150;
+    const flash = Math.sin(t) > 0;
+    if (flash) {
+      ctx.fillStyle = '#ff4444';
+      ctx.font = `${tileSize * 0.6}px Arial`;
+      ctx.textAlign = 'center';
+      ctx.fillText('⚔', x + cx2 + Math.cos(t)*5, y - 2 + Math.sin(t*2)*3);
+    }
+    // Red pulse ring
+    ctx.globalAlpha = 0.3 + Math.sin(t) * 0.2;
+    ctx.strokeStyle = '#ff3333';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(x + cx2, y + cx2, tileSize * 0.9, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+  }
+
+  // ─── MOVEMENT TRAIL: small dots behind moving agents ───
+  if (a.state === 'moving') {
+    ctx.globalAlpha = 0.15;
+    ctx.fillStyle = col;
+    ctx.beginPath();
+    ctx.arc(x + cx2 - 3, y + cx2 + 3, 2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(x + cx2 + 2, y + cx2 + 5, 1.5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalAlpha = 1;
+  }
+
+  // ─── ROLE ICON below sprite ───
+  ctx.fillStyle = col;
+  ctx.font = 'bold 7px Arial';
+  ctx.textAlign = 'center';
+  ctx.fillText(a.role ? a.role.slice(0,3).toUpperCase() : '', x + cx2, y + tileSize + 7);
+
+  ctx.textAlign = 'left';
+}
+
+function drawPixelBody(a, x, y) {
+  const sprite = buildSprite(a.faction, a.role || 'warrior');
+  // Draw sprite scaled to fit tileSize (with some padding for accessories)
+  const drawW = tileSize * 1.2;
+  const drawH = tileSize * 1.3;
+  const offsetX = x - (drawW - tileSize) / 2;
+  const offsetY = y - (drawH - tileSize) * 0.3;
+  ctx.drawImage(sprite, offsetX, offsetY, drawW, drawH);
+}
+
+function drawMinimap() {
+  mmCtx.fillStyle = '#06060f';
+  mmCtx.fillRect(0, 0, mmCanvas.width, mmCanvas.height);
+  for (let y = 0; y < mapHeight; y++) {
+    for (let x = 0; x < mapWidth; x++) {
+      const c = worldMap?.[y]?.[x]; if (!c) continue;
+      // Territory color takes priority
+      if (c.owner) {
+        const fc = fColor(c.owner);
+        mmCtx.fillStyle = fc;
+        mmCtx.globalAlpha = 0.4;
+        mmCtx.fillRect(x, y, 1, 1);
+        mmCtx.globalAlpha = 1;
+        continue;
+      }
+      switch(c.type) {
+        case 'water': mmCtx.fillStyle = '#0e2030'; break;
+        case 'forest': mmCtx.fillStyle = '#0f1c10'; break;
+        case 'mountain': mmCtx.fillStyle = '#282020'; break;
+        case 'sand': mmCtx.fillStyle = '#3a3018'; break;
+        default: mmCtx.fillStyle = '#1e2b1c';
+      }
+      mmCtx.fillRect(x, y, 1, 1);
+    }
+  }
+  // Capture zones
+  (gameState.capZones || []).forEach(z => {
+    const col = z.owner ? fColor(z.owner) : '#ffd700';
+    mmCtx.fillStyle = col;
+    mmCtx.globalAlpha = 0.6;
+    mmCtx.fillRect(Math.floor(z.x) - 1, Math.floor(z.y) - 1, 3, 3);
+    mmCtx.globalAlpha = 1;
+  });
+  // Agents
+  gameState.agents.forEach(a => {
+    const pos = getAgentRenderPos(a);
+    mmCtx.fillStyle = a.hp > 0 ? fColor(a.faction) : '#333';
+    mmCtx.fillRect(Math.floor(pos.x), Math.floor(pos.y), 2, 2);
+  });
+  // Buildings
+  (gameState.buildings||[]).forEach(b => {
+    mmCtx.fillStyle = '#ffd166';
+    mmCtx.fillRect(Math.floor(b.x), Math.floor(b.y), 2, 2);
+  });
+  // Viewport indicator
+  const scale = getScale();
+  const cam = getCam();
+  const vw = canvas.width / scale / tileSize;
+  const vh = canvas.height / scale / tileSize;
+  mmCtx.strokeStyle = '#fff';
+  mmCtx.lineWidth = 0.8;
+  mmCtx.globalAlpha = 0.5;
+  mmCtx.strokeRect(cam.x, cam.y, vw, vh);
+  mmCtx.globalAlpha = 1;
+}
+
+// ═══════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════
+function fColor(f) { return { crimson:'#ff3355', azure:'#3366ff', void:'#aa44ff' }[f] || '#fff'; }
+function fEmoji(f) { return { crimson:'[C]', azure:'[A]', void:'[V]' }[f] || '[?]'; }
+function fName(f) { return { crimson:'Crimson Empire', azure:'Azure Republic', void:'Void Syndicate' }[f] || f; }
+function factionOf(sender) {
+  if (!gameState) return '';
+  const a = gameState.agents.find(x => x.name === sender);
+  return a ? ({crimson:'c',azure:'a',void:'v'}[a.faction]||'') : '';
+}
+
+// Building type selector for human player
+let selectedBuildType = 'wall';
+const BUILD_TYPES = ['wall', 'tower', 'mine', 'barracks'];
+
+// Keyboard
+document.addEventListener('keydown', (e) => {
+  // Tab toggles leaderboard (always works)
+  if (e.key === 'Tab') { e.preventDefault(); toggleLeaderboard(); return; }
+  if (!isHuman || !myAgentId) return;
+  const key = e.key.toLowerCase();
+  const acts = {
+    'arrowup': { action:'move', direction:'north' },
+    'arrowdown': { action:'move', direction:'south' },
+    'arrowleft': { action:'move', direction:'west' },
+    'arrowright': { action:'move', direction:'east' },
+    'w': { action:'move', direction:'north' },
+    's': { action:'move', direction:'south' },
+    'a': { action:'move', direction:'west' },
+    'd': { action:'move', direction:'east' },
+    ' ': { action:'attack' }, 'c': { action:'collect' },
+    'x': { action:'capture' },
+    'b': { action:'build', buildingType: selectedBuildType }
+  };
+  // Number keys 1-4 select building type
+  if (key >= '1' && key <= '4') {
+    selectedBuildType = BUILD_TYPES[parseInt(key) - 1];
+    updateHUD();
+    return;
+  }
+  const act = acts[key] || acts[e.key];
+  if (act) { e.preventDefault(); socket.emit('human-action', act); }
+});
+
+// Minimap click
+minimapEl.addEventListener('click', (e) => {
+  const rect = minimapEl.getBoundingClientRect();
+  const mx = (e.clientX - rect.left) / rect.width * mapWidth;
+  const my = (e.clientY - rect.top) / rect.height * mapHeight;
+  // Navigate camera to clicked position
+  const scale = getScale();
+  const viewW = canvas.width / scale / tileSize;
+  const viewH = canvas.height / scale / tileSize;
+  camOffsetX = mx - viewW / 2;
+  camOffsetY = my - viewH / 2;
+  followAgentId = null; // stop following
+});
+
+// ═══════════════════════════════════════════════
+// HUD & LEADERBOARD
+// ═══════════════════════════════════════════════
+function selectBuild(type) {
+  selectedBuildType = type;
+  updateHUD();
+}
+
+function updateHUD() {
+  const hud = document.getElementById('hud-bar');
+  if (!isHuman || !myAgentId) { hud.style.display = 'none'; return; }
+  hud.style.display = 'flex';
+  const me = gameState && gameState.agents.find(a => a.id === myAgentId);
+  if (!me) return;
+  const inv = me.inventory || {};
+  const hpPct = Math.max(0, me.hp / me.maxHp) * 100;
+  document.getElementById('hud-hp-fill').style.width = hpPct + '%';
+  document.getElementById('hud-hp-fill').style.background = hpPct > 60 ? '#00cc44' : hpPct > 30 ? '#cccc00' : '#cc0000';
+  document.getElementById('hud-hp-text').textContent = `${me.hp}/${me.maxHp}`;
+  document.getElementById('hud-gold').textContent = inv.gold || 0;
+  document.getElementById('hud-food').textContent = inv.food || 0;
+  document.getElementById('hud-wood').textContent = inv.wood || 0;
+  document.getElementById('hud-stone').textContent = inv.stone || 0;
+  document.querySelectorAll('.hud-btype').forEach(btn => {
+    btn.classList.toggle('sel', btn.dataset.type === selectedBuildType);
+  });
+}
+
+let leaderboardVisible = false;
+function toggleLeaderboard() {
+  leaderboardVisible = !leaderboardVisible;
+  document.getElementById('leaderboard-overlay').style.display = leaderboardVisible ? 'block' : 'none';
+  if (leaderboardVisible) updateLeaderboard();
+}
+
+function switchLbTab(tabId, btn) {
+  document.querySelectorAll('.lb-content').forEach(el => el.style.display = 'none');
+  document.querySelectorAll('.lb-tab').forEach(el => el.classList.remove('active'));
+  document.getElementById(tabId).style.display = 'block';
+  btn.classList.add('active');
+}
+
+function updateLeaderboard() {
+  if (!gameState) return;
+  const agents = gameState.agents || [];
+  const factions = gameState.factions || {};
+
+  // Factions tab
+  const fHtml = `<table><tr><th>Faction</th><th>Score</th><th>Wealth</th><th>Zones</th><th>Alive</th><th>Buildings</th></tr>` +
+    ['crimson','azure','void'].map(f => {
+      const fa = factions[f] || {};
+      const alive = agents.filter(a => a.faction === f && a.hp > 0).length;
+      const total = agents.filter(a => a.faction === f).length;
+      const score = agents.filter(a => a.faction === f).reduce((s,a) => s + (a.score||0), 0);
+      const zones = (gameState.capZones || []).filter(z => z.owner === f).length;
+      const bldgs = (gameState.buildings || []).filter(b => b.faction === f).length;
+      const col = fColor(f);
+      return `<tr><td style="color:${col};font-weight:700;text-transform:capitalize">${f}</td><td>${score}</td><td>${Math.round(fa.wealth||0)}</td><td>${zones}</td><td>${alive}/${total}</td><td>${bldgs}</td></tr>`;
+    }).join('') + `</table>`;
+  document.getElementById('lb-factions').innerHTML = fHtml;
+
+  // Agents tab
+  const sorted = [...agents].sort((a,b) => (b.score||0) - (a.score||0));
+  const aHtml = `<table><tr><th>#</th><th>Agent</th><th>Model</th><th>Role</th><th>K/D</th><th>Score</th><th>HP</th></tr>` +
+    sorted.map((a, i) => {
+      const col = fColor(a.faction);
+      const model = (a.model || 'fallback-ai').replace(/^(openai|anthropic|google|meta-llama|mistralai|deepseek)\//i, '').slice(0,20);
+      const dead = a.hp <= 0;
+      return `<tr style="${dead ? 'opacity:.4' : ''}"><td>${i+1}</td><td style="color:${col};font-weight:600">${esc(a.name)}</td><td style="color:#888">${esc(model)}</td><td style="text-transform:capitalize">${a.role}</td><td>${a.kills||0}/${a.deaths||0}</td><td style="color:#ffd700">${a.score||0}</td><td>${a.hp}/${a.maxHp}</td></tr>`;
+    }).join('') + `</table>`;
+  document.getElementById('lb-agents').innerHTML = aHtml;
+
+  // Models tab
+  const modelMap = {};
+  agents.forEach(a => {
+    const m = (a.model || 'fallback-ai').replace(/^(openai|anthropic|google|meta-llama|mistralai|deepseek)\//i, '');
+    if (!modelMap[m]) modelMap[m] = { count: 0, kills: 0, deaths: 0, score: 0, alive: 0 };
+    modelMap[m].count++;
+    modelMap[m].kills += a.kills || 0;
+    modelMap[m].deaths += a.deaths || 0;
+    modelMap[m].score += a.score || 0;
+    if (a.hp > 0) modelMap[m].alive++;
+  });
+  const models = Object.entries(modelMap).sort((a,b) => b[1].score - a[1].score);
+  const mHtml = `<table><tr><th>Model</th><th>Agents</th><th>Alive</th><th>Kills</th><th>Deaths</th><th>Total Score</th><th>Avg Score</th></tr>` +
+    models.map(([m, s]) => {
+      const avg = s.count ? Math.round(s.score / s.count) : 0;
+      return `<tr><td style="color:#fff;font-weight:600">${esc(m)}</td><td>${s.count}</td><td>${s.alive}</td><td>${s.kills}</td><td>${s.deaths}</td><td style="color:#ffd700">${s.score}</td><td>${avg}</td></tr>`;
+    }).join('') + `</table>`;
+  document.getElementById('lb-models').innerHTML = mHtml;
+}
+
+// ═══════════════════════════════════════════════
+// CLICK INTERACTIONS (enhanced)
+// ═══════════════════════════════════════════════
+canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+
+// ═══════════════════════════════════════════════
+// ZOOM (mouse wheel)
+// ═══════════════════════════════════════════════
+canvas.addEventListener('wheel', (e) => {
+  e.preventDefault();
+  const factor = e.deltaY > 0 ? 0.88 : 1.12;
+  zoomLevel = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, zoomLevel * factor));
+  terrainDirty = true;
+  territoryDirty = true;
+}, { passive: false });
+
+// ═══════════════════════════════════════════════
+// PAN (middle-click drag OR right-click drag)
+// ═══════════════════════════════════════════════
+canvas.addEventListener('mousedown', (e) => {
+  if (e.button === 1 || e.button === 2) { // middle or right click
+    isPanning = true;
+    panStartX = e.clientX;
+    panStartY = e.clientY;
+    e.preventDefault();
+  }
+});
+window.addEventListener('mousemove', (e) => {
+  if (!isPanning) return;
+  const scale = getScale();
+  const dx = (e.clientX - panStartX) / scale / tileSize;
+  const dy = (e.clientY - panStartY) / scale / tileSize;
+  camOffsetX -= dx;
+  camOffsetY -= dy;
+  panStartX = e.clientX;
+  panStartY = e.clientY;
+});
+window.addEventListener('mouseup', (e) => {
+  if (e.button === 1 || e.button === 2) isPanning = false;
+});
+
+// Double-click to re-center / stop following
+canvas.addEventListener('dblclick', (e) => {
+  if (followAgentId) {
+    camOffsetX = 0;
+    camOffsetY = 0;
+  }
+});
+
+// ═══════════════════════════════════════════════
+// MAIN RENDER LOOP (independent of socket events)
+// ═══════════════════════════════════════════════
+function gameRenderLoop() {
+  try {
+    render();
+  } catch(e) {
+    _lastRenderError = e.message;
+    console.error('Render error:', e);
+  }
+  requestAnimationFrame(gameRenderLoop);
+}
+
+// Draw debug/status overlay (always visible)
+function drawStatusOverlay() {
+  ctx.save();
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  const cw = canvas.width;
+
+  // FPS counter
+  _frameCount++;
+  const now = performance.now();
+  if (now - _fpsTime > 1000) {
+    _renderFPS = _frameCount;
+    _frameCount = 0;
+    _fpsTime = now;
+  }
+
+  // Status bar at bottom-left
+  const tick = gameState ? gameState.tick : 0;
+  const agentCount = gameState ? gameState.agents.length : 0;
+  const connected = socket.connected;
+
+  ctx.fillStyle = 'rgba(0,0,0,0.7)';
+  ctx.fillRect(0, canvas.height - 18, 320, 18);
+  ctx.font = '11px monospace';
+  ctx.fillStyle = connected ? '#0f0' : '#f00';
+  ctx.fillText(connected ? 'ONLINE' : 'OFFLINE', 6, canvas.height - 5);
+  ctx.fillStyle = '#aaa';
+  ctx.fillText('Tick:' + tick + ' | Agents:' + agentCount + ' | FPS:' + _renderFPS + ' | Map:' + (worldMap ? 'OK' : 'WAIT'), 60, canvas.height - 5);
+
+  if (_lastRenderError) {
+    ctx.fillStyle = '#f44';
+    ctx.fillText('ERR: ' + _lastRenderError, 6, canvas.height - 22);
+  }
+
+  // If no game state yet, show waiting message
+  if (!gameState) {
+    ctx.fillStyle = 'rgba(0,0,0,0.8)';
+    ctx.fillRect(0, 0, cw, canvas.height);
+    ctx.fillStyle = '#ffd700';
+    ctx.font = 'bold 24px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText('Connecting to server...', cw/2, canvas.height/2 - 10);
+    ctx.fillStyle = '#888';
+    ctx.font = '14px Arial';
+    ctx.fillText(connected ? 'Waiting for game data...' : 'Server not connected', cw/2, canvas.height/2 + 20);
+    ctx.textAlign = 'left';
+  }
+
+  ctx.restore();
+}
+
+fitCanvas();
+requestAnimationFrame(gameRenderLoop);
+</script>
+</body>
+</html>
